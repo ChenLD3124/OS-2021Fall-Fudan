@@ -10,7 +10,17 @@
 /* 
  * uvm stands user vitual memory. 
  */
-
+//my struct
+typedef struct{
+    uint16_t an[4];
+} IA;
+typedef struct{
+    uint8_t V,T;
+    uint64_t pa;
+    uint16_t Uattr,Lattr;
+} PTE;
+void _assert(int e,char* m);
+//
 typedef struct {
     PTEntriesPtr (*pgdir_init)(void);
     PTEntriesPtr (*pgdir_walk)(PTEntriesPtr pgdir, void *kernel_address, int alloc);

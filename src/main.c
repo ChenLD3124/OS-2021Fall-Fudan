@@ -8,9 +8,8 @@ NORETURN void main() {
     init_char_device();
     init_console();
 	/* TODO: Lab1 print */
-    printf("Hello world!");
-
+    printf("Hello world!\n");
     init_memory_manager();
     init_virtual_memory();
-
+    vm_test();
 }

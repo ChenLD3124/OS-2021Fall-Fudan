@@ -1,6 +1,7 @@
 #include <aarch64/mmu.h>
 #include <core/physical_memory.h>
 #include <common/types.h>
+#include <common/string.h>
 #include <core/console.h>
 
 extern char end[];
@@ -21,7 +22,12 @@ static void freelist_free(void *datastructure_ptr, void *page_address);
 static void *freelist_alloc(void *datastructure_ptr) {
     FreeListNode *f = (FreeListNode *) datastructure_ptr; 
     /* TODO: Lab2 memory*/
-
+    void *tmp=f->next;
+    if(tmp){
+        f->next=((FreeListNode*)tmp)->next;
+        memset(tmp,0,PAGE_SIZE);//junk data
+    }
+    return tmp;
 }
 
 /*
@@ -30,7 +36,10 @@ static void *freelist_alloc(void *datastructure_ptr) {
 static void freelist_free(void *datastructure_ptr, void *page_address) {
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
     /* TODO: Lab2 memory*/
-
+    void *tmp=f->next;
+    f->next=page_address;
+    // memset(page_address,1,PAGE_SIZE);//junk data
+    ((FreeListNode*)page_address)->next=tmp;
 }
 
 /*
@@ -40,7 +49,8 @@ static void freelist_free(void *datastructure_ptr, void *page_address) {
 static void freelist_init(void *datastructure_ptr, void *start, void *end) {
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
     /* TODO: Lab2 memory*/
-
+    f->next=0;
+    for(void* ite=start;ite+PAGE_SIZE<=end;ite+=PAGE_SIZE)freelist_free(datastructure_ptr,ite);
 }
 
 
@@ -59,6 +69,7 @@ void init_memory_manager(void) {
     // notice here for roundup
     void *ROUNDUP_end = ROUNDUP((void *)end, PAGE_SIZE);
     init_PMemory(&pmem);
+    // printf("%llu %llu\n",ROUNDUP_end, (void *)P2K(phystop));
     pmem.page_init(pmem.struct_ptr, ROUNDUP_end, (void *)P2K(phystop));
 }
 
