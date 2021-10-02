@@ -11,12 +11,12 @@ extern PTEntries kpgdir;
 VMemory vmem;
 //my function
 void _assert(int e,char* m){
-    if(!e){printf("assert error : %s\n",m);while(1);}
+    if(!e) PANIC(m);
 }
 static IA IAinit(uint64_t num){
     IA ia;
     num>>=12;
-    for(int i=0;i<=3;i++){
+    for(int i=3;i>=0;i--){
         ia.an[i]=num&0x1ff;
         num>>=9;
     }
@@ -107,8 +107,10 @@ static PTEntriesPtr my_pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
         PTE entry=PTEinit(*dist,i);
         if(!entry.V&&!alloc)return NULL;
         if(!entry.V&&alloc){
+            PTEntriesPtr tmp=(uint64_t)kalloc();
+            if(tmp==0)return NULL;
+            entry.pa=K2P(tmp)>>12;
             entry.V=1;
-            entry.pa=K2P((uint64_t)kalloc())>>12;
             entry.T=1;
             *dist=PTE2int64(entry,i);
         }
@@ -121,14 +123,14 @@ static PTEntriesPtr my_pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
 
 /* Free a user page table and all the physical memory pages. */
 static void level_free(PTEntriesPtr pgdir,int level){
-    if(level==3){
+    if(level==4){
         kfree((void *)(pgdir));
         return;
     }
-    for(int i=0;i<512;i++){
+    for(int i=0;i<N_PTE_PER_TABLE;i++){
         PTE entry=PTEinit(pgdir[i],level);
         if(entry.V){
-            _assert(entry.T==1,"table has block!");
+            if(level<3) _assert(entry.T==1,"table has block!");
             level_free((PTEntriesPtr)(P2K(entry.pa<<12)),level+1);
         }
     }
@@ -154,9 +156,10 @@ int my_uvm_map(PTEntriesPtr pgdir, void *va, size_t sz, uint64_t pa) {
     void* last=ROUNDDOWN(va+sz-1,PAGE_SIZE)+PAGE_SIZE;
     for(;va!=last;va+=PAGE_SIZE,pa+=PAGE_SIZE){
         PTEntriesPtr tmp=my_pgdir_walk(pgdir,va,1);
-        _assert(tmp!=0,"map:walk failed");
+        // _assert(tmp!=0,"map:walk failed");
+        if(tmp==0)return -1;
         PTE entry=PTEinit(*tmp,3);
-        if(entry.V)return -1;
+        _assert(entry.V==0,"reused");
         entry.pa=pa>>12;
         entry.T=0;
         entry.V=1;
@@ -180,7 +183,7 @@ void init_virtual_memory() {
 
 void vm_test() {
     /* TODO: Lab2 memory*/
-    printf("test begin:\n");
+    printf("test begin\n");
     #define N 20000
     uint64_t p[N],v[N];
     //myfunc test begin
@@ -205,12 +208,14 @@ void vm_test() {
     for(uint64_t i=1;i<N;i++){
         p[i]=(uint64_t)kalloc();
     }
+    printf("text1 pass!\n");
     PTEntriesPtr pgdir=pgdir_init();
     for(uint64_t i=1;i<N;i++){
         v[i]=i<<12;
         int a=uvm_map(pgdir,(void*)(v[i]),PAGE_SIZE,K2P(p[i]));
         _assert(a==0,"map failed");
     }
+    printf("text2 pass!\n");
     for(uint64_t i=1;i<N;i++){
         PTEntriesPtr tmp=pgdir_walk(pgdir,(void*)v[i],0);
         _assert(tmp!=0,"can not walk!");
@@ -218,6 +223,8 @@ void vm_test() {
         _assert(entry.V==1,"not alloc!");
         _assert((uint64_t)(P2K(entry.pa<<12))==p[i],"not match!");
     }
+    printf("text3 pass!\n");
+    
     for(uint64_t i=N;i<2*N;i++){
         PTEntriesPtr tmp=pgdir_walk(pgdir,(void*)((uint64_t)i<<12),0);
         if(tmp==0)continue;
