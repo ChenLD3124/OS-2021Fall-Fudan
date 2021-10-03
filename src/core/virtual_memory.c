@@ -4,15 +4,14 @@
 #include <core/physical_memory.h>
 #include <common/types.h>
 #include <core/console.h>
+#include <common/myfunc.h>
 
 /* For simplicity, we only support 4k pages in user pgdir. */
 
 extern PTEntries kpgdir;
 VMemory vmem;
 //my function
-void _assert(int e,char* m){
-    if(!e) PANIC(m);
-}
+
 static IA IAinit(uint64_t num){
     IA ia;
     num>>=12;
@@ -183,9 +182,12 @@ void init_virtual_memory() {
 
 void vm_test() {
     /* TODO: Lab2 memory*/
+    #ifdef DEBUG
     printf("test begin\n");
     #define N 20000
-    uint64_t p[N],v[N];
+    uint64_t p[N],v[N],bcnt;
+    bcnt=cnt;
+    // printf("%llu\n",cnt);
     //myfunc test begin
     for(uint64_t i=0;i<N;i++){
         uint64_t l1=(i<<12)|3;
@@ -198,25 +200,26 @@ void vm_test() {
         p[i]=(uint64_t)kalloc();
         if(i!=0)_assert(p[i-1]-p[i]==PAGE_SIZE,"err\n");
     }
+    _assert(bcnt-cnt==N,"alloc error");
     for(int i=N-1;i>=0;i--){
         kfree((void*)p[i]);
     }
+    _assert(bcnt==cnt,"free error");
     for(uint64_t i=0;i<N;i++){
         v[i]=(uint64_t)kalloc();
         _assert(p[i]==v[i],"pmemory error!");
     }
-    for(uint64_t i=1;i<N;i++){
-        p[i]=(uint64_t)kalloc();
-    }
+    printf("%llu\n",cnt);
+    _assert(bcnt-cnt==N,"alloc error");
     printf("text1 pass!\n");
     PTEntriesPtr pgdir=pgdir_init();
-    for(uint64_t i=1;i<N;i++){
+    for(uint64_t i=0;i<N;i++){
         v[i]=i<<12;
         int a=uvm_map(pgdir,(void*)(v[i]),PAGE_SIZE,K2P(p[i]));
         _assert(a==0,"map failed");
     }
     printf("text2 pass!\n");
-    for(uint64_t i=1;i<N;i++){
+    for(uint64_t i=0;i<N;i++){
         PTEntriesPtr tmp=pgdir_walk(pgdir,(void*)v[i],0);
         _assert(tmp!=0,"can not walk!");
         PTE entry=PTEinit(*tmp,3);
@@ -232,7 +235,10 @@ void vm_test() {
         _assert(entry.V==0,"valid error");
     }
     vm_free(pgdir);
+    // printf("%llu %llu\n",cnt,bcnt);
+    _assert(bcnt==cnt,"free error");
     printf("\ntest pass!\n");
     #undef N
+    #endif
     // Certify that your code works!
 }

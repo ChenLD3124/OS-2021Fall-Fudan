@@ -3,9 +3,11 @@
 #include <common/types.h>
 #include <common/string.h>
 #include <core/console.h>
+#include <common/myfunc.h>
 
 extern char end[];
 PMemory pmem;
+
 FreeListNode head;
 /*
  * Editable, as long as it works as a memory manager.
@@ -26,6 +28,9 @@ static void *freelist_alloc(void *datastructure_ptr) {
     if(tmp){
         f->next=((FreeListNode*)tmp)->next;
         memset(tmp,0,PAGE_SIZE);//junk data
+        #ifdef DEBUG
+        cnt--;
+        #endif
     }
     return tmp;
 }
@@ -38,6 +43,10 @@ static void freelist_free(void *datastructure_ptr, void *page_address) {
     /* TODO: Lab2 memory*/
     void *tmp=f->next;
     f->next=page_address;
+    _assert(page_address!=0,"page_address errro");
+    #ifdef DEBUG
+    cnt++;
+    #endif
     // memset(page_address,1,PAGE_SIZE);//junk data
     ((FreeListNode*)page_address)->next=tmp;
 }
@@ -50,6 +59,9 @@ static void freelist_init(void *datastructure_ptr, void *start, void *end) {
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
     /* TODO: Lab2 memory*/
     f->next=0;
+    #ifdef DEBUG
+    cnt=0;
+    #endif
     for(void* ite=start;ite+PAGE_SIZE<=end;ite+=PAGE_SIZE)freelist_free(datastructure_ptr,ite);
 }
 

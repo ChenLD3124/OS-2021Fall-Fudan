@@ -19,7 +19,7 @@ typedef struct{
     uint64_t pa;
     uint16_t Uattr,Lattr;
 } PTE;
-void _assert(int e,char* m);
+
 //
 typedef struct {
     PTEntriesPtr (*pgdir_init)(void);
