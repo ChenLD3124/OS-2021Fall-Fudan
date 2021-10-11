@@ -4,7 +4,7 @@
 #define _COMMON_MYFUNC_H_
 #include<common/types.h>
 #include<core/console.h>
-#define DEBUG
+// #define DEBUG
 #ifdef DEBUG
 uint64_t cnt;
 #endif

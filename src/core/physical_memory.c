@@ -23,7 +23,7 @@ static void freelist_free(void *datastructure_ptr, void *page_address);
  */
 static void *freelist_alloc(void *datastructure_ptr) {
     FreeListNode *f = (FreeListNode *) datastructure_ptr; 
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     void *tmp=f->next;
     if(tmp){
         f->next=((FreeListNode*)tmp)->next;
@@ -40,7 +40,7 @@ static void *freelist_alloc(void *datastructure_ptr) {
  */
 static void freelist_free(void *datastructure_ptr, void *page_address) {
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     void *tmp=f->next;
     f->next=page_address;
     _assert(page_address!=0,"page_address errro");
@@ -57,7 +57,7 @@ static void freelist_free(void *datastructure_ptr, void *page_address) {
 
 static void freelist_init(void *datastructure_ptr, void *start, void *end) {
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     f->next=0;
     #ifdef DEBUG
     cnt=0;

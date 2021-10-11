@@ -27,12 +27,8 @@ static PTE PTEinit(uint64_t num,uint8_t level){
     entry.Lattr=0;entry.Uattr=0;entry.pa=0;
     if(entry.V){
         if(entry.T){
-            entry.pa=(num>>12)&0xfffffffff;//36
-        }
-        else{
             entry.Uattr=(num>>51)&0x1fff;
             entry.Lattr=(num>>2)&0x3ff;
-            _assert(level==3,"table has block");
             entry.pa=(num>>12)&0xfffffffff;//36
         }
     }
@@ -42,12 +38,6 @@ static uint64_t PTE2int64(PTE entry,uint8_t level){
     uint64_t tmp=0;
     if(!entry.V)return 0;
     if(entry.T){
-        tmp|=((uint64_t)entry.pa<<12);
-        tmp|=(uint64_t)entry.V;
-        tmp|=((uint64_t)entry.T<<1);
-    }
-    else{
-        _assert(level==3,"PTE2int64 err\n");
         tmp|=((uint64_t)entry.pa<<12);
         tmp|=(uint64_t)entry.V;
         tmp|=((uint64_t)entry.T<<1);
@@ -86,7 +76,7 @@ void uvm_switch(PTEntriesPtr pgdir) {
  */
 
 static PTEntriesPtr my_pgdir_init() {
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     return (PTEntriesPtr)kalloc();
 }
 
@@ -98,7 +88,7 @@ static PTEntriesPtr my_pgdir_init() {
  */
 
 static PTEntriesPtr my_pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     IA addr=IAinit((uint64_t)vak);
     PTEntriesPtr nxt=pgdir,dist;
     for(int i=0;i<3;i++){
@@ -136,7 +126,7 @@ static void level_free(PTEntriesPtr pgdir,int level){
     kfree(pgdir);
 }
 void my_vm_free(PTEntriesPtr pgdir) {
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     level_free(pgdir,0);
 }
 
@@ -148,7 +138,7 @@ void my_vm_free(PTEntriesPtr pgdir) {
  */
 
 int my_uvm_map(PTEntriesPtr pgdir, void *va, size_t sz, uint64_t pa) {
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
     if(sz==0)return 0;
     va=ROUNDDOWN(va,PAGE_SIZE);
     pa=ROUNDDOWN(pa,PAGE_SIZE);
@@ -160,8 +150,9 @@ int my_uvm_map(PTEntriesPtr pgdir, void *va, size_t sz, uint64_t pa) {
         PTE entry=PTEinit(*tmp,3);
         _assert(entry.V==0,"reused");
         entry.pa=pa>>12;
-        entry.T=0;
+        entry.T=1;
         entry.V=1;
+        entry.Lattr=1|(3<<7)|(1<<4);
         *tmp=PTE2int64(entry,3);
         entry=PTEinit(*tmp,3);
         _assert(entry.pa==pa>>12,"myfunc error");
@@ -181,7 +172,30 @@ void init_virtual_memory() {
 }
 
 void vm_test() {
-    /* TODO: Lab2 memory*/
+    /* DONE: Lab2 memory*/
+    // *((int64_t *)P2K(0)) = 0xac;
+    // char *p = kalloc();
+    // memset(p, 0, PAGE_SIZE);
+    // uvm_map((uint64_t *)p, (void *)0x1000, PAGE_SIZE, 0);
+	// uvm_switch(p);
+	// PTEntry *pte = pgdir_walk(p, (void *)0x1000, 0);
+	// if (pte == 0) {
+	// 	puts("walk should not return 0"); while (1);
+	// }
+	// if (((uint64_t)pte >> 48) == 0) {
+	// 	puts("pte should be virtual address"); while (1);
+	// }
+	// if ((*pte) >> 48 != 0) {
+	// 	puts("*pte should store physical address"); while (1);
+	// }
+	// if (((*pte) & PTE_USER_DATA) != PTE_USER_DATA) {
+	// 	puts("*pte should contain USE_DATA flags"); while (1);
+	// }
+    // if (*((int64_t *)0x1000) == 0xac) {
+    //     puts("Test_Map_Region Pass!");
+    // } else {
+	// 	puts("Test_Map_Region Fail!"); while (1);
+    // }
     #ifdef DEBUG
     printf("test begin\n");
     #define N 20000

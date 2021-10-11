@@ -32,13 +32,12 @@ NORETURN void main() {
     init_interrupt();
     init_char_device();
     init_console();
-	/* TODO: Lab1 print */
+	/* DONE: Lab1 print */
     printf("Hello world!\n");
     init_memory_manager();
     init_virtual_memory();
 
     vm_test();
-
 
     init_system_per_cpu();
 
@@ -46,6 +45,6 @@ NORETURN void main() {
     // test_kernel_interrupt();
     spawn_init_process();
     enter_scheduler();
-
+    arch_enable_trap();
 
 }
