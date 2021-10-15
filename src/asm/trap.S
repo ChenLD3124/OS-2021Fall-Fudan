@@ -12,7 +12,7 @@ trap_entry:
      *    ELR_EL1, SPSR_EL1, and SP_EL0.
      */
 
-    /* TODO: Lab3 Interrupt. */
+    /* DONE: Lab3 Interrupt. */
      stp x1,  x0,  [sp,#-16]!
      stp x3,  x2,  [sp,#-16]!
      stp x5,  x4,  [sp,#-16]! 
@@ -41,7 +41,7 @@ trap_entry:
      * Hint: The first argument is a stack pointer.
      */
 
-    /* TODO: Lab3 Interrupt */
+    /* DONE: Lab3 Interrupt */
     mov x0,  sp
     bl   trap_global_handler
 
@@ -54,7 +54,7 @@ trap_return:
      * Hint: `ldp x1, x2, [sp], #16` is equivalent to first `pop x1`
      * and then `pop x2`.
      */
-    /* TODO: Lab3 Interrupt */
+    /* DONE: Lab3 Interrupt */
     ldr x9,  [sp], #8
     msr ELR_EL1,   x9  
     ldr x9,  [sp], #8

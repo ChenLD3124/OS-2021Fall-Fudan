@@ -11,7 +11,8 @@ set(aarch64_objdump "${aarch64_prefix}-objdump")
 set(aarch64_objcopy "${aarch64_prefix}-objcopy")
 
 set(aarch64_qemu "qemu-system-aarch64")
-set(aarch64_gdb "gdb-multiarch")
+set(aarch64_gdb "gdb")
+# -multiarch
 
 add_subdirectory(src)
 add_subdirectory(boot)
@@ -39,4 +40,5 @@ add_custom_target(debug
             -ex "set architecture aarch64"
             -ex "file ${kernel_elf}"
             -ex "target remote localhost:1234"
+            -ex "source /root/data/OS-2021Fall-Fudan/pwndbg/gdbinit.py"
     DEPENDS kernel)
