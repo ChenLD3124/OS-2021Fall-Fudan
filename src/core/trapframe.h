@@ -5,6 +5,12 @@
 
 #include <common/defines.h>
 
+/*
+ * Trapframe should contain register x0~x30,
+ * elr_el1, spsr_el1 and  sp_el0.
+ * Pay attention to the order of these registers
+ * in your trapframe.
+ */
 typedef struct {
 	/* DONE: Lab3 Interrupt */
 	u64 ELR_EL1,SPSR_EL1,SP_EL0;

@@ -37,7 +37,7 @@ trap_entry:
      str x9,  [sp,#-8]!
 
     /*
-     * Call trap(struct *trapframe).
+     * Call trap_global_handler(Trapframe *frame).
      * Hint: The first argument is a stack pointer.
      */
 
