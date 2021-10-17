@@ -6,6 +6,7 @@
 #include <common/string.h>
 #include <core/sched.h>
 #include <core/console.h>
+#include<common/myfunc.h>
 
 void forkret();
 extern void trap_return();
@@ -24,7 +25,24 @@ extern void trap_return();
  */
 static struct proc *alloc_proc() {
     struct proc *p;
-    /* TODO: Lab3 Process */
+    /* DONE: Lab3 Process */
+    _assert(thiscpu()->scheduler->op->alloc_pcb!=0,"alloc pcb error!");
+    p=thiscpu()->scheduler->op->alloc_pcb();
+    if(p==0)return 0;
+    p->state=EMBRYO;
+    p->kstack=kalloc()+PAGE_SIZE;
+    if(p->kstack==PAGE_SIZE){
+        p->state=UNUSED;
+        return 0;
+    }
+    void* sp=p->kstack;
+    sp-=sizeof(Trapframe);
+    p->tf=sp;
+    sp-=sizeof(context);
+    p->context=sp;
+    memset(p->tf,0,sizeof(Trapframe));
+    p->context->x30=(u64)forkret;
+    return p;
 }
 
 /*
@@ -40,16 +58,26 @@ void spawn_init_process() {
     struct proc *p;
     extern char icode[], eicode[];
     p = alloc_proc();
-
-    /* TODO: Lab3 Process */
+    
+    /* DONE: Lab3 Process */
+    p->pgdir=pgdir_init();
+    char * initcode=(char*)kalloc();
+    memcpy(initcode,icode,eicode-icode);
+    strncpy(p->name,"init_process",sizeof(p->name));
+    uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
+    p->tf->ELR_EL1=0;
+    p->tf->x30=0;
+    p->sz=PAGE_SIZE;
+    p->parent=0;
+    p->state=RUNNABLE;
 }
 
 /*
  * A fork child will first swtch here, and then "return" to user space.
  */
 void forkret() {
-	/* TODO: Lab3 Process */
-
+	/* DONE: Lab3 Process */
+    return;
 }
 
 /*
@@ -59,6 +87,8 @@ void forkret() {
  */
 NO_RETURN void exit() {
     struct proc *p = thiscpu()->proc;
-    /* TODO: Lab3 Process */
-	
+    /* DONE: Lab3 Process */
+	p->state=ZOMBIE;
+    thiscpu()->scheduler->op->sched();
+    _assert(1==0,"zombie exit!");
 }

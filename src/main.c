@@ -41,9 +41,8 @@ NORETURN void main() {
 
     init_system_per_cpu();
 
-	/* TODO: Lab3 uncomment to test interrupt */
+	/* DONE: Lab3 uncomment to test interrupt */
     // test_kernel_interrupt();
-    arch_enable_trap();
     spawn_init_process();
     enter_scheduler();
     

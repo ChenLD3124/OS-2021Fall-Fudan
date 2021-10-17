@@ -10,7 +10,7 @@ if(CMAKE_SYSTEM_PROCESSOR EQUAL "aarch64")
     set(aarch64_gdb "gdb")
 else()
     set(aarch64_prefix "aarch64-linux-gnu-")
-    set(aarch64_gdb "gdb-multiarch")
+    set(aarch64_gdb "gdb")#-multiarch
 endif()
 
 set(aarch64_gcc "${aarch64_prefix}gcc")
@@ -19,11 +19,6 @@ set(aarch64_objdump "${aarch64_prefix}objdump")
 set(aarch64_objcopy "${aarch64_prefix}objcopy")
 
 set(aarch64_qemu "qemu-system-aarch64")
-<<<<<<< HEAD
-set(aarch64_gdb "gdb")
-# -multiarch
-=======
->>>>>>> origin/lab3
 
 add_subdirectory(src)
 add_subdirectory(boot)

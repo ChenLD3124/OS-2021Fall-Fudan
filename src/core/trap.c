@@ -35,13 +35,16 @@ void trap_global_handler(Trapframe *frame) {
 			 * where to record the return value?
 			 */
 			/* TODO: Lab3 Syscall */
-
+            syscall_dispatch(frame);
             // TODO: warn if `iss` is not zero.
+
             (void)iss;
         } break;
 
         default: {
             // TODO: should exit current process here.
+            exit();
+            _assert(1==2,"syscal not exit!");
             // exit(1);
         }
     }
@@ -50,7 +53,7 @@ void trap_global_handler(Trapframe *frame) {
 	 * Use GDB to check whether x6 is correct after `trap_return` finishes.
 	 * If another register changes to 0xdead, fix the bug in trapframe design.
 	 */
-	
+	frame->x6=0xdead;
 }
 
 NORETURN void trap_error_handler(u64 type) {

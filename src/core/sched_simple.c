@@ -32,8 +32,18 @@ static void scheduler_simple() {
 
     for (;;) {
         /* Loop over process table looking for process to run. */
-        /* TODO: Lab3 Schedule */
-
+        /* DONE: Lab3 Schedule */
+        for(int i=0;i<NPROC;i++){
+            p=&(ptable.proc[i]);
+            if(ptable.proc[i].state==RUNNABLE){
+                p->state=RUNNING;
+                uvm_switch(p->pgdir);
+                c->proc=p;
+                swtch(&(c->scheduler->context),p->context);
+                assert(p->state!=RUNNING);
+                c->proc=0;
+            }
+        }
     }
 }
 
@@ -41,8 +51,8 @@ static void scheduler_simple() {
  * `Swtch` to thiscpu->scheduler.
  */
 static void sched_simple() {
-    /* TODO: Lab3 Schedule */
-	
+    /* DONE: Lab3 Schedule */
+	swtch(&(thiscpu()->proc->context),thiscpu()->scheduler->context);
 }
 
 /* 
@@ -50,6 +60,12 @@ static void sched_simple() {
  * Allocate a new pid for it.
  */
 static struct proc *alloc_pcb_simple() {
-    /* TODO: Lab3 Schedule */
-
+    /* DONE: Lab3 Schedule */
+    for(int i=0;i<NPROC;i++){
+        if(ptable.proc[i].state==UNUSED){
+            ptable.proc[i].pid=i+1;
+            return &(ptable.proc[i]);
+        }
+    }
+    return 0;
 }

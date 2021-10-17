@@ -16,10 +16,10 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
  */
 /* Stack must always be 16 bytes aligned. */
 struct context {
-    /* TODO: Lab3 Process */
-
+    /* DONE: Lab3 Process */
+    u64 x30,x28,x27,x26,x25,x24,x23,x22,x21,x20,x19;
 };
-
+typedef struct context context;
 struct proc {
     u64 sz;             /* Size of process memory (bytes)          */
     u64 *pgdir;         /* Page table                              */
@@ -37,4 +37,5 @@ typedef struct proc proc;
 void init_proc();
 void spawn_init_process();
 void yield();
+void forkret();
 void exit();
