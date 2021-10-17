@@ -26,8 +26,7 @@ extern void trap_return();
 static struct proc *alloc_proc() {
     struct proc *p;
     /* DONE: Lab3 Process */
-    _assert(thiscpu()->scheduler->op->alloc_pcb!=0,"alloc pcb error!");
-    p=thiscpu()->scheduler->op->alloc_pcb();
+    p=alloc_pcb();
     if(p==0)return 0;
     p->state=EMBRYO;
     p->kstack=kalloc()+PAGE_SIZE;
@@ -66,6 +65,7 @@ void spawn_init_process() {
     strncpy(p->name,"init_process",sizeof(p->name));
     uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
     p->tf->ELR_EL1=0;
+    p->tf->SP_EL0=0;
     p->tf->x30=0;
     p->sz=PAGE_SIZE;
     p->parent=0;
@@ -89,6 +89,6 @@ NO_RETURN void exit() {
     struct proc *p = thiscpu()->proc;
     /* DONE: Lab3 Process */
 	p->state=ZOMBIE;
-    thiscpu()->scheduler->op->sched();
+    sched();
     _assert(1==0,"zombie exit!");
 }

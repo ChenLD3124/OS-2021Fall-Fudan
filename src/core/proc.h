@@ -17,7 +17,7 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 /* Stack must always be 16 bytes aligned. */
 struct context {
     /* DONE: Lab3 Process */
-    u64 x30,x28,x27,x26,x25,x24,x23,x22,x21,x20,x19;
+    u64 x30,x29,x28,x27,x26,x25,x24,x23,x22,x21,x20,x19;
 };
 typedef struct context context;
 struct proc {

@@ -35,7 +35,7 @@ static void scheduler_simple() {
         /* DONE: Lab3 Schedule */
         for(int i=0;i<NPROC;i++){
             p=&(ptable.proc[i]);
-            if(ptable.proc[i].state==RUNNABLE){
+            if(p->state==RUNNABLE){
                 p->state=RUNNING;
                 uvm_switch(p->pgdir);
                 c->proc=p;
@@ -63,7 +63,7 @@ static struct proc *alloc_pcb_simple() {
     /* DONE: Lab3 Schedule */
     for(int i=0;i<NPROC;i++){
         if(ptable.proc[i].state==UNUSED){
-            ptable.proc[i].pid=i+1;
+            ptable.proc[i].pid=nextpid++;
             return &(ptable.proc[i]);
         }
     }

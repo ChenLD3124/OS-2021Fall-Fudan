@@ -7,7 +7,7 @@
  * See `syscallno.h` for syscall number macros.
  */
 u64 syscall_dispatch(Trapframe *frame) {
-    /* TODO: Lab3 Syscall */
+    /* DONE: Lab3 Syscall */
 	switch(frame->x8){
         case SYS_myexecve:{
             sys_myexecve(frame->x0);
