@@ -7,7 +7,7 @@
 struct {
     struct proc proc[NPROC];
     SpinLock lock;
-} ptable /* TODO: Lab5 multicore: Add locks where needed in this file or others */;
+} ptable /* DONE: Lab5 multicore: Add locks where needed in this file or others */;
 
 static void scheduler_simple();
 static struct proc *alloc_pcb_simple();
@@ -54,10 +54,11 @@ static void scheduler_simple() {
     for (;;) {
         /* Loop over process table looking for process to run. */
         /* DONE: Lab3 Schedule */
-        acquire_ptable_lock();
         for(int i=0;i<NPROC;i++){
+            acquire_ptable_lock();
             p=&(ptable.proc[i]);
             if(p->state==RUNNABLE){
+                if(c->proc)c->proc->state=RUNNABLE;
                 p->state=RUNNING;
                 uvm_switch(p->pgdir);
                 c->proc=p;
@@ -65,6 +66,7 @@ static void scheduler_simple() {
                 assert(p->state!=RUNNING);
                 c->proc=0;
             }
+            release_ptable_lock();
         }
     }
 }
@@ -74,7 +76,7 @@ static void scheduler_simple() {
  */
 static void sched_simple() {
 
-    /* TODO: Your code here. */
+    /* DONE: Your code here. */
 	if (!holding_spinlock(&ptable.lock)) {
 		PANIC("sched: not holding ptable lock");
 	}
@@ -91,11 +93,14 @@ static void sched_simple() {
  */
 static struct proc *alloc_pcb_simple() {
     /* DONE: Lab3 Schedule */
+    acquire_ptable_lock();
     for(int i=0;i<NPROC;i++){
         if(ptable.proc[i].state==UNUSED){
             ptable.proc[i].pid=nextpid++;
+            release_ptable_lock();
             return &(ptable.proc[i]);
         }
     }
+    release_ptable_lock();
     return 0;
 }

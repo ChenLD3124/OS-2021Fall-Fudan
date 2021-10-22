@@ -5,6 +5,7 @@
 #include <core/physical_memory.h>
 #include <common/string.h>
 #include <core/sched.h>
+#include <core/sched_simple.c>
 #include <core/console.h>
 #include<common/myfunc.h>
 
@@ -89,6 +90,7 @@ void forkret() {
 NO_RETURN void exit() {
     struct proc *p = thiscpu()->proc;
     /* DONE: Lab3 Process */
+    acquire_ptable_lock();
 	p->state=ZOMBIE;
     sched();
     _assert(1==0,"zombie exit!");

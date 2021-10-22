@@ -32,7 +32,7 @@ static void *freelist_alloc(void *datastructure_ptr) {
         cnt--;
         #endif
     }
-    acquire_spinlock(&pmem.lock);
+    release_spinlock(&pmem.lock);
     return tmp;
 }
 

@@ -27,8 +27,6 @@ void init_system_once() {
     init_memory_manager();
     init_virtual_memory();
 
-    // vm_test();
-
     release_spinlock(&init_lock);
 }
 
@@ -41,18 +39,15 @@ void init_system_per_cpu() {
     init_clock();
     set_clock_handler(hello);
     init_trap();
-
-	/* TODO: Lab3 uncomment to test interrupt */
-    // test_kernel_interrupt();
     init_cpu(&simple_scheduler);
 }
 
-NORETURN void main() {
-	/* TODO: Lab1 print */
+void main() {
 	
     init_system_once();
     wait_spinlock(&init_lock);
-
+    /* DONE: Lab1 print */
+	printf("Hello world!\n");
     vm_test();
 
     init_system_per_cpu();
