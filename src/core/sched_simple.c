@@ -54,6 +54,7 @@ static void scheduler_simple() {
     for (;;) {
         /* Loop over process table looking for process to run. */
         /* DONE: Lab3 Schedule */
+        acquire_ptable_lock();
         for(int i=0;i<NPROC;i++){
             p=&(ptable.proc[i]);
             if(p->state==RUNNABLE){

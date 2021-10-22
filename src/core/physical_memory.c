@@ -6,7 +6,7 @@
 #include <common/myfunc.h>
 
 extern char end[];
-PMemory pmem; /* TODO: Lab5 multicore: Add locks where needed */
+PMemory pmem; /* DONE: Lab5 multicore: Add locks where needed */
 FreeListNode head;
 /*
  * Editable, as long as it works as a memory manager.
@@ -21,6 +21,7 @@ static void freelist_free(void *datastructure_ptr, void *page_address);
  * Returns 0 if the memory cannot be allocated.
  */
 static void *freelist_alloc(void *datastructure_ptr) {
+    acquire_spinlock(&pmem.lock);
     FreeListNode *f = (FreeListNode *) datastructure_ptr; 
     /* DONE: Lab2 memory*/
     void *tmp=f->next;
@@ -31,6 +32,7 @@ static void *freelist_alloc(void *datastructure_ptr) {
         cnt--;
         #endif
     }
+    acquire_spinlock(&pmem.lock);
     return tmp;
 }
 
@@ -38,6 +40,7 @@ static void *freelist_alloc(void *datastructure_ptr) {
  * Free the page of physical memory pointed at by page_address.
  */
 static void freelist_free(void *datastructure_ptr, void *page_address) {
+    acquire_spinlock(&pmem.lock);
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
     /* DONE: Lab2 memory*/
     void *tmp=f->next;
@@ -48,6 +51,7 @@ static void freelist_free(void *datastructure_ptr, void *page_address) {
     #endif
     // memset(page_address,1,PAGE_SIZE);//junk data
     ((FreeListNode*)page_address)->next=tmp;
+    release_spinlock(&pmem.lock);
 }
 
 /*
