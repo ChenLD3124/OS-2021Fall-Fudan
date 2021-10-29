@@ -6,7 +6,7 @@
 #include <common/myfunc.h>
 
 extern char end[];
-PMemory pmem; /* DONE: Lab5 multicore: Add locks where needed */
+PMemory pmem; /* DONE: Lab4 multicore: Add locks where needed */
 FreeListNode head;
 /*
  * Editable, as long as it works as a memory manager.
