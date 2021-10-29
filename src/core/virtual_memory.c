@@ -1,10 +1,13 @@
 #include <aarch64/intrinsic.h>
+#include <common/defines.h>
 #include <common/string.h>
-#include <core/virtual_memory.h>
-#include <core/physical_memory.h>
-#include <common/types.h>
 #include <core/console.h>
+<<<<<<< HEAD
 #include <common/myfunc.h>
+=======
+#include <core/physical_memory.h>
+#include <core/virtual_memory.h>
+>>>>>>> origin/lab5
 
 /* For simplicity, we only support 4k pages in user pgdir. */
 
@@ -53,7 +56,7 @@ PTEntriesPtr pgdir_init() {
 }
 
 PTEntriesPtr pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
-    
+
     return vmem.pgdir_walk(pgdir, vak, alloc);
 }
 
@@ -70,16 +73,18 @@ void uvm_switch(PTEntriesPtr pgdir) {
     arch_set_ttbr0(K2P(pgdir));
 }
 
-
 /*
  * generate a empty page as page directory
  */
 
 static PTEntriesPtr my_pgdir_init() {
+<<<<<<< HEAD
     /* DONE: Lab2 memory*/
     return (PTEntriesPtr)kalloc();
+=======
+    /* TODO: Lab2 memory*/
+>>>>>>> origin/lab5
 }
-
 
 /*
  * return the address of the pte in user page table
@@ -88,6 +93,7 @@ static PTEntriesPtr my_pgdir_init() {
  */
 
 static PTEntriesPtr my_pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
+<<<<<<< HEAD
     /* DONE: Lab2 memory*/
     IA addr=IAinit((uint64_t)vak);
     PTEntriesPtr nxt=pgdir,dist;
@@ -107,8 +113,10 @@ static PTEntriesPtr my_pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
     }
     dist=&(nxt[addr.an[3]]);
     return dist;
+=======
+    /* TODO: Lab2 memory*/
+>>>>>>> origin/lab5
 }
-
 
 /* Free a user page table and all the physical memory pages. */
 static void level_free(PTEntriesPtr pgdir,int level){
@@ -126,8 +134,12 @@ static void level_free(PTEntriesPtr pgdir,int level){
     kfree(pgdir);
 }
 void my_vm_free(PTEntriesPtr pgdir) {
+<<<<<<< HEAD
     /* DONE: Lab2 memory*/
     level_free(pgdir,0);
+=======
+    /* TODO: Lab2 memory*/
+>>>>>>> origin/lab5
 }
 
 /*

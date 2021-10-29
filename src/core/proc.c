@@ -1,13 +1,18 @@
 
-#include <core/proc.h>
 #include <aarch64/mmu.h>
-#include <core/virtual_memory.h>
-#include <core/physical_memory.h>
 #include <common/string.h>
+<<<<<<< HEAD
 #include <core/sched.h>
 #include <core/sched_simple.c>
 #include <core/console.h>
 #include<common/myfunc.h>
+=======
+#include <core/console.h>
+#include <core/physical_memory.h>
+#include <core/proc.h>
+#include <core/sched.h>
+#include <core/virtual_memory.h>
+>>>>>>> origin/lab5
 
 void forkret();
 extern void trap_return();
