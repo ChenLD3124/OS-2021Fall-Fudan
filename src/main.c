@@ -21,15 +21,13 @@ void init_system_once() {
     // clear BSS section.
     extern char edata[], end[];
     memset(edata, 0, end - edata);
-
+    
     init_interrupt();
     init_char_device();
     init_console();
     init_sched();
-
     init_memory_manager();
     init_virtual_memory();
-
     vm_test();
     arena_test();
 

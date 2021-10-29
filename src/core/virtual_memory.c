@@ -195,10 +195,11 @@ void vm_test() {
     // }
     #ifdef DEBUG
     printf("test begin\n");
-    #define N 20000
-    uint64_t p[N],v[N],bcnt;
+    #define N 2000
+    uint64_t aaa[N],c_p[N],c_v[N],bcnt;
+    
     bcnt=cnt;
-    // printf("%llu\n",cnt);
+    printf("%llu\n",cnt);
     //myfunc test begin
     for(uint64_t i=0;i<N;i++){
         uint64_t l1=(i<<12)|3;
@@ -208,34 +209,39 @@ void vm_test() {
     }
     //myfunc test end
     for(uint64_t i=0;i<N;i++){
-        p[i]=(uint64_t)kalloc();
-        if(i!=0)_assert(p[i-1]-p[i]==PAGE_SIZE,"err\n");
+        u64 qqq=(uint64_t)kalloc();
+        c_p[i]=qqq;
+        if(i>1&&c_p[i-1]-c_p[i]!=PAGE_SIZE)printf("!!%llx %llx %llx %llx %llx\n",c_p[i-2],c_p[i-1],c_p[i],&c_p[i],qqq);
+        if(i!=0)_assert(c_p[i-1]-c_p[i]==PAGE_SIZE,"err\n");
     }
+    printf("!!!\n");
     _assert(bcnt-cnt==N,"alloc error");
     for(int i=N-1;i>=0;i--){
-        kfree((void*)p[i]);
+        kfree((void*)c_p[i]);
+        // printf("!%llu\n",c_p[i]);
     }
+    printf("@@@\n");
     _assert(bcnt==cnt,"free error");
     for(uint64_t i=0;i<N;i++){
-        v[i]=(uint64_t)kalloc();
-        _assert(p[i]==v[i],"pmemory error!");
+        c_v[i]=(uint64_t)kalloc();
+        _assert(c_p[i]==c_v[i],"pmemory error!");
     }
     printf("%llu\n",cnt);
     _assert(bcnt-cnt==N,"alloc error");
     printf("text1 pass!\n");
     PTEntriesPtr pgdir=pgdir_init();
     for(uint64_t i=0;i<N;i++){
-        v[i]=i<<12;
-        int a=uvm_map(pgdir,(void*)(v[i]),PAGE_SIZE,K2P(p[i]));
+        c_v[i]=i<<12;
+        int a=uvm_map(pgdir,(void*)(c_v[i]),PAGE_SIZE,K2P(c_p[i]));
         _assert(a==0,"map failed");
     }
     printf("text2 pass!\n");
     for(uint64_t i=0;i<N;i++){
-        PTEntriesPtr tmp=pgdir_walk(pgdir,(void*)v[i],0);
+        PTEntriesPtr tmp=pgdir_walk(pgdir,(void*)c_v[i],0);
         _assert(tmp!=0,"can not walk!");
         PTE entry=PTEinit(*tmp,3);
         _assert(entry.V==1,"not alloc!");
-        _assert((uint64_t)(P2K(entry.pa<<12))==p[i],"not match!");
+        _assert((uint64_t)(P2K(entry.pa<<12))==c_p[i],"not match!");
     }
     printf("text3 pass!\n");
     
