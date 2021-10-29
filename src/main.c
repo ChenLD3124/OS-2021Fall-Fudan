@@ -54,7 +54,6 @@ void main() {
     wait_spinlock(&init_lock);
     /* DONE: Lab1 print */
 	printf("Hello world!\n");
-    vm_test();
 
     init_system_per_cpu();
 
