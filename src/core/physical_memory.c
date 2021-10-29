@@ -21,7 +21,6 @@ static void freelist_free(void *datastructure_ptr, void *page_address);
  * Returns 0 if the memory cannot be allocated.
  */
 static void *freelist_alloc(void *datastructure_ptr) {
-<<<<<<< HEAD
     acquire_spinlock(&pmem.lock);
     FreeListNode *f = (FreeListNode *) datastructure_ptr; 
     /* DONE: Lab2 memory*/
@@ -35,17 +34,12 @@ static void *freelist_alloc(void *datastructure_ptr) {
     }
     release_spinlock(&pmem.lock);
     return tmp;
-=======
-    FreeListNode *f = (FreeListNode *)datastructure_ptr;
-    /* TODO: Lab2 memory*/
->>>>>>> origin/lab5
 }
 
 /*
  * Free the page of physical memory pointed at by page_address.
  */
 static void freelist_free(void *datastructure_ptr, void *page_address) {
-<<<<<<< HEAD
     acquire_spinlock(&pmem.lock);
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
     /* DONE: Lab2 memory*/
@@ -58,10 +52,6 @@ static void freelist_free(void *datastructure_ptr, void *page_address) {
     // memset(page_address,1,PAGE_SIZE);//junk data
     ((FreeListNode*)page_address)->next=tmp;
     release_spinlock(&pmem.lock);
-=======
-    FreeListNode *f = (FreeListNode *)datastructure_ptr;
-    /* TODO: Lab2 memory*/
->>>>>>> origin/lab5
 }
 
 /*
@@ -69,7 +59,6 @@ static void freelist_free(void *datastructure_ptr, void *page_address) {
  */
 
 static void freelist_init(void *datastructure_ptr, void *start, void *end) {
-<<<<<<< HEAD
     FreeListNode* f = (FreeListNode*) datastructure_ptr; 
     /* DONE: Lab2 memory*/
     f->next=0;
@@ -77,10 +66,6 @@ static void freelist_init(void *datastructure_ptr, void *start, void *end) {
     cnt=0;
     #endif
     for(void* ite=start;ite+PAGE_SIZE<=end;ite+=PAGE_SIZE)freelist_free(datastructure_ptr,ite);
-=======
-    FreeListNode *f = (FreeListNode *)datastructure_ptr;
-    /* TODO: Lab2 memory*/
->>>>>>> origin/lab5
 }
 
 static void init_PMemory(PMemory *pmem_ptr) {

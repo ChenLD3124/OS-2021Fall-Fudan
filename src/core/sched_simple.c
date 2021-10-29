@@ -75,7 +75,6 @@ static void scheduler_simple() {
  * `Swtch` to thiscpu->scheduler.
  */
 static void sched_simple() {
-<<<<<<< HEAD
 
     /* DONE: Your code here. */
 	if (!holding_spinlock(&ptable.lock)) {
@@ -86,16 +85,6 @@ static void sched_simple() {
     }
     /* DONE: Lab3 Schedule */
 	swtch(&(thiscpu()->proc->context),thiscpu()->scheduler->context);
-=======
-    /* TODO: Your code here. */
-    if (!holding_spinlock(&ptable.lock)) {
-        PANIC("sched: not holding ptable lock");
-    }
-    if (thiscpu()->proc->state == RUNNING) {
-        PANIC("sched: process running");
-    }
-    /* TODO: Lab3 Schedule */
->>>>>>> origin/lab5
 }
 
 /*
@@ -103,7 +92,6 @@ static void sched_simple() {
  * Allocate a new pid for it.
  */
 static struct proc *alloc_pcb_simple() {
-<<<<<<< HEAD
     /* DONE: Lab3 Schedule */
     acquire_ptable_lock();
     for(int i=0;i<NPROC;i++){
@@ -116,7 +104,3 @@ static struct proc *alloc_pcb_simple() {
     release_ptable_lock();
     return 0;
 }
-=======
-    /* TODO: Lab3 Schedule */
-}
->>>>>>> origin/lab5

@@ -53,10 +53,7 @@ void trap_global_handler(Trapframe *frame) {
 	 * Use GDB to check whether x6 is correct after `trap_return` finishes.
 	 * If another register changes to 0xdead, fix the bug in trapframe design.
 	 */
-<<<<<<< HEAD
-	frame->x6=0xdead;
-=======
->>>>>>> origin/lab5
+	// frame->x6=0xdead;
 }
 
 NORETURN void trap_error_handler(u64 type) {
