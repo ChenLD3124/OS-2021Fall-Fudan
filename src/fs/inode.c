@@ -54,7 +54,7 @@ static void init_inode(Inode *inode) {
 static usize inode_alloc(OpContext *ctx, InodeType type) {
     assert(type != INODE_INVALID);
 
-    // TODO
+    // TODO:Lab5
 
     PANIC("failed to allocate inode on disk");
 }
@@ -74,7 +74,7 @@ static void inode_unlock(Inode *inode) {
 
 // see `inode.h`.
 static void inode_sync(OpContext *ctx, Inode *inode, bool do_write) {
-    // TODO
+    // TODO:Lab5
 }
 
 // see `inode.h`.
@@ -82,7 +82,7 @@ static Inode *inode_get(usize inode_no) {
     assert(inode_no > 0);
     assert(inode_no < sblock->num_inodes);
 
-    // TODO
+    // TODO:Lab5
 
     return NULL;
 }
@@ -91,7 +91,7 @@ static Inode *inode_get(usize inode_no) {
 static void inode_clear(OpContext *ctx, Inode *inode) {
     InodeEntry *entry = &inode->entry;
 
-    // TODO
+    // TODO:Lab5
 }
 
 // see `inode.h`.
@@ -104,7 +104,7 @@ static Inode *inode_share(Inode *inode) {
 
 // see `inode.h`.
 static void inode_put(OpContext *ctx, Inode *inode) {
-    // TODO
+    // TODO:Lab5
 }
 
 // this function is private to inode interface, because it can allocate block
@@ -119,7 +119,7 @@ static void inode_put(OpContext *ctx, Inode *inode) {
 static usize inode_map(OpContext *ctx, Inode *inode, usize offset, bool *modified) {
     InodeEntry *entry = &inode->entry;
 
-    // TODO
+    // TODO:Lab5
 
     return 0;
 }
@@ -132,7 +132,7 @@ static void inode_read(Inode *inode, u8 *dest, usize offset, usize count) {
     assert(end <= entry->num_bytes);
     assert(offset <= end);
 
-    // TODO
+    // TODO:Lab5
 }
 
 // see `inode.h`.
@@ -143,7 +143,7 @@ static void inode_write(OpContext *ctx, Inode *inode, u8 *src, usize offset, usi
     assert(end <= INODE_MAX_BYTES);
     assert(offset <= end);
 
-    // TODO
+    // TODO:Lab5
 }
 
 // see `inode.h`.
@@ -151,7 +151,7 @@ static usize inode_lookup(Inode *inode, const char *name, usize *index) {
     InodeEntry *entry = &inode->entry;
     assert(entry->type == INODE_DIRECTORY);
 
-    // TODO
+    // TODO:Lab5
 
     return 0;
 }
@@ -161,7 +161,7 @@ static usize inode_insert(OpContext *ctx, Inode *inode, const char *name, usize 
     InodeEntry *entry = &inode->entry;
     assert(entry->type == INODE_DIRECTORY);
 
-    // TODO
+    // TODO:Lab5
 
     return 0;
 }
@@ -171,7 +171,7 @@ static void inode_remove(OpContext *ctx, Inode *inode, usize index) {
     InodeEntry *entry = &inode->entry;
     assert(entry->type == INODE_DIRECTORY);
 
-    // TODO
+    // TODO:Lab5
 }
 
 InodeTree inodes = {

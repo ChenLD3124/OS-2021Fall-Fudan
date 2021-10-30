@@ -195,8 +195,8 @@ void vm_test() {
     // }
     #ifdef DEBUG
     printf("test begin\n");
-    #define N 2000
-    uint64_t aaa[N],c_p[N],c_v[N],bcnt;
+    #define N 20000 //kernal stack has just 4096 byte
+    static uint64_t c_p[N],c_v[N],bcnt;
     
     bcnt=cnt;
     printf("%llu\n",cnt);
