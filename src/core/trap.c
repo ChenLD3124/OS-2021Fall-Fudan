@@ -56,6 +56,6 @@ void trap_global_handler(Trapframe *frame) {
 	// frame->x6=0xdead;
 }
 
-NORETURN void trap_error_handler(u64 type) {
+void trap_error_handler(u64 type) {
     PANIC("unknown trap type: %d", type);
 }

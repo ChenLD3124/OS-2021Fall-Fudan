@@ -97,7 +97,7 @@ static void inode_sync(OpContext *ctx, Inode *inode, bool do_write) {
     sip=get_entry(bp,inum);
     if(inode->valid==1&&do_write==1){
         memmove(sip,&(inode->entry),sizeof(InodeEntry));
-        // assert(ctx!=NULL);
+        assert(ctx!=NULL);
         cache->sync(ctx,bp);
     }
     else if(inode->valid==0&&do_write==0){
@@ -133,7 +133,8 @@ static Inode *inode_get(usize inode_no) {
     inode_lock(mip);
     inode_sync(NULL,mip,0);
     inode_unlock(mip);
-    mip->valid=1;
+    // mip->valid=1;
+    assert(mip->valid==1);
     init_list_node(&(mip->node));
     merge_list(hp,&(mip->node));
     release_spinlock(&lock);
@@ -316,11 +317,11 @@ static usize inode_insert(OpContext *ctx, Inode *inode, const char *name, usize 
     assert(inode->valid!=0);
     assert(inode_no!=0);
     usize off=0;
-    inode_lookup(inode,name,&off);
+    /*inode_lookup(inode,name,&off);
     if(off!=0){
         inode_put(ctx,inode);
         return -1;
-    }
+    }*/
     DirEntry direntryin,direntryout;
     strncpy(direntryin.name,name,FILE_NAME_MAX_LENGTH);
     direntryin.inode_no=inode_no;

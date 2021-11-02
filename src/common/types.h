@@ -5,8 +5,8 @@
 
 typedef _Bool bool;
 
-#define true 1
-#define false 0
+// #define true 1
+// #define false 0
 
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
