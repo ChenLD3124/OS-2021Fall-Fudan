@@ -127,15 +127,14 @@ static Inode *inode_get(usize inode_no) {
     mip=(Inode*)alloc_object(&arena);
     assert(mip!=NULL);
     memset(mip,0,sizeof(Inode));
+    init_inode(mip);
     increment_rc(&(mip->rc));
     mip->inode_no=inode_no;
-    init_spinlock(&(mip->lock),"nodelock");
     inode_lock(mip);
     inode_sync(NULL,mip,0);
     inode_unlock(mip);
     // mip->valid=1;
     assert(mip->valid==1);
-    init_list_node(&(mip->node));
     merge_list(hp,&(mip->node));
     release_spinlock(&lock);
     return mip;
