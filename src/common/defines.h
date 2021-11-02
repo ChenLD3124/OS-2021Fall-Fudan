@@ -18,7 +18,9 @@ typedef unsigned long long u64;
 
 typedef i64 isize;
 typedef u64 usize;
-
+#define NULL 0
+#define true 1
+#define false 0
 /* Efficient min and max operations */
 #define MIN(_a, _b)                                                                                \
     ({                                                                                             \

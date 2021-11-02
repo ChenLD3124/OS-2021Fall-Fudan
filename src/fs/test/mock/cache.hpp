@@ -168,7 +168,7 @@ struct MockBlockCache {
             auto *inodes = reinterpret_cast<InodeEntry *>(sblk[j].block.data);
             for (usize k = 0; k < step; k++) {
                 if (inodes[k].type != INODE_INVALID)
-                    count++;
+                    count++;//printf("!%d %d\n",i+k,inodes[k].type),
             }
         }
 

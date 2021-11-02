@@ -67,7 +67,7 @@ void printf(const char *fmt, ...) {
     va_end(arg);
 }
 
-NORETURN void _panic(const char *file, usize line, const char *fmt, ...) {
+void _panic(const char *file, usize line, const char *fmt, ...) {
     acquire_spinlock(&ctx.lock);
     check_panicked();
 
