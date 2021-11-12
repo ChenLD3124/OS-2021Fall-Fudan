@@ -95,3 +95,38 @@ void exit() {
     sched();
     _assert(1==0,"zombie exit!");
 }
+
+/*
+ * Give up CPU.
+ * Switch to the scheduler of this proc.
+ */
+void yield() {
+    /* TODO: lab6 container */
+
+}
+
+/*
+ * Atomically release lock and sleep on chan.
+ * Reacquires lock when awakened.
+ */
+void sleep(void *chan, SpinLock *lock) {
+    /* TODO: lab6 container */
+
+}
+
+/* Wake up all processes sleeping on chan. */
+void wakeup(void *chan) {
+    /* TODO: lab6 container */
+
+}
+
+/* 
+ * Add process at thiscpu()->container,
+ * execute code in src/user/loop.S
+ */
+void add_loop_test(int times) {
+    for (int i = 0; i < times; i++) {
+        /* TODO: lab6 container */
+
+    }
+}

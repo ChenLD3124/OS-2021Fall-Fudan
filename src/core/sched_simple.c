@@ -4,6 +4,7 @@
 #include <core/sched.h>
 #include <core/virtual_memory.h>
 
+#ifndef MULTI_SCHEDULER
 struct {
     struct proc proc[NPROC];
     SpinLock lock;
@@ -104,3 +105,4 @@ static struct proc *alloc_pcb_simple() {
     release_ptable_lock();
     return 0;
 }
+#endif
