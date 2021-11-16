@@ -90,7 +90,7 @@ void forkret() {
 void exit() {
     struct proc *p = thiscpu()->proc;
     /* DONE: Lab3 Process */
-    acquire_ptable_lock();
+    acquire_sched_lock();
 	p->state=ZOMBIE;
     sched();
     _assert(1==0,"zombie exit!");
@@ -101,8 +101,12 @@ void exit() {
  * Switch to the scheduler of this proc.
  */
 void yield() {
-    /* TODO: lab6 container */
-
+    /* DONE: lab6 container */
+    struct  proc *p=thiscpu()->proc;
+    acquire_sched_lock();
+    p->state=RUNNABLE;
+    sched();
+    release_sched_lock();
 }
 
 /*

@@ -17,9 +17,9 @@ extern void add_loop_test(int times);
  * Maintain thiscpu()->scheduler.
  */
 static NO_RETURN void container_entry() {
-    /* TODO: lab6 container */
-
-
+    /* DONE: lab6 container */
+    release_sched_lock();
+    enter_scheduler();
 	/* container_entry should enter scheduler and should not return */
     PANIC("scheduler should not return");
 }
@@ -32,8 +32,24 @@ static NO_RETURN void container_entry() {
  * Initialize some pointers.
  */
 struct container *alloc_container(bool root) {
-    /* TODO: lab6 container */
-	
+    /* DONE: lab6 container */
+    struct container *c;
+    c=(container*)alloc_object(&arena);
+    if(root==1)return c;
+
+    c->p=alloc_pcb();
+    if(c->p==0)return 0;
+    c->p->state=EMBRYO;
+    c->p->kstack=kalloc()+PAGE_SIZE;
+    if(c->p->kstack==PAGE_SIZE){
+        c->p->state=UNUSED;
+        return 0;
+    }
+    void* sp=c->p->kstack;
+    sp-=sizeof(context);
+    c->p->context=sp;
+    c->p->context->x30=(u64)container_entry;
+    return c;
 }
 
 /*
@@ -42,7 +58,11 @@ struct container *alloc_container(bool root) {
  */
 void init_container() {
     /* TODO: lab6 container */
-
+    ArenaPageAllocator allocator = {.allocate = kalloc, .free = kfree};
+    init_arena(&arena, sizeof(container), allocator);
+    root_container=alloc_container(1);
+    root_container->parent=root_container;
+    // memcpy(&root_container->scheduler,&simple_scheduler,sizeof(scheduler));
 }
 
 /* 

@@ -6,7 +6,7 @@
 
 #ifdef MULTI_SCHEDULER
 
-/* TODO: Lab6 Add more Scheduler Policies */
+/* DONE: Lab6 Add more Scheduler Policies */
 static void scheduler_simple(struct scheduler *this);
 static struct proc *alloc_pcb_simple(struct scheduler *this);
 static void sched_simple(struct scheduler *this);
@@ -41,19 +41,60 @@ static void release_ptable_lock(struct scheduler *this) {
  * Pay attention to thiscpu() structure and locks.
  */
 void yield_scheduler(struct scheduler *this) {
-
+    struct  proc *p=thiscpu()->proc;
+    acquire_sched_lock();
+    if(this->parent!=this){
+        thiscpu()->scheduler=this->parent;
+        swtch(this->context[cpuid()],this->parent->context[cpuid()]);
+    }
+    release_sched_lock();
 }
 
-NO_RETURN void scheduler_simple(struct scheduler *this) {
-    
+void scheduler_simple(struct scheduler *this) {
+    struct proc *p;
+    struct cpu *c = thiscpu();
+    c->proc = NULL;
+
+    for (;;) {
+        /* Loop over process table looking for process to run. */
+        for(int i=0;i<NPROC;i++){
+            acquire_ptable_lock(this);
+            p=&(this->ptable.proc[i]);
+            if(p->state==RUNNABLE){
+                if(c->proc)c->proc->state=RUNNABLE;
+                p->state=RUNNING;
+                uvm_switch(p->pgdir);
+                c->proc=p;
+                swtch(&(c->scheduler->context[cpuid()]),p->context);
+                assert(p->state!=RUNNING);
+                c->proc=0;
+            }
+            release_ptable_lock(this);
+        }
+    }
 }
 
 static void sched_simple(struct scheduler *this) {
-    
+    if (!holding_spinlock(&(this->ptable.lock))) {
+		PANIC("sched: not holding ptable lock");
+	}
+    if (thiscpu()->proc->state == RUNNING) {
+        PANIC("sched: process running");
+    }
+	swtch(&(thiscpu()->proc->context),thiscpu()->scheduler->context[cpuid()]);
 }
 
 static struct proc *alloc_pcb_simple(struct scheduler *this) {
-    
+    acquire_ptable_lock(this);
+    for(int i=0;i<NPROC;i++){
+        if(this->ptable.proc[i].state==UNUSED){
+            this->ptable.proc[i].pid=i+1;
+            release_ptable_lock(this);
+            return &(this->ptable.proc[i]);
+        }
+    }
+    release_ptable_lock(this);
+    return 0;
 }
 
 #endif
