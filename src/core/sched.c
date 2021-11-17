@@ -41,12 +41,10 @@ static void release_ptable_lock(struct scheduler *this) {
  * Pay attention to thiscpu() structure and locks.
  */
 void yield_scheduler(struct scheduler *this) {
-    struct  proc *p=thiscpu()->proc;
-    acquire_sched_lock();
-    if(this->parent!=this){
-        thiscpu()->scheduler=this->parent;
-        swtch(this->context[cpuid()],this->parent->context[cpuid()]);
-    }
+    if(this->parent==this)return;
+    thiscpu()->scheduler=this->parent;
+    acquire_sched_lock();//parents' lock
+    swtch(this->context[cpuid()],this->parent->context[cpuid()]);
     release_sched_lock();
 }
 
@@ -63,11 +61,18 @@ void scheduler_simple(struct scheduler *this) {
             if(p->state==RUNNABLE){
                 if(c->proc)c->proc->state=RUNNABLE;
                 p->state=RUNNING;
-                uvm_switch(p->pgdir);
                 c->proc=p;
-                swtch(&(c->scheduler->context[cpuid()]),p->context);
+                if(p->is_scheduler==0){
+                    uvm_switch(p->pgdir);
+                    swtch(&(c->scheduler->context[cpuid()]),p->context);
+                }
+                else{
+                    swtch(&c->scheduler->context[cpuid()],&((container*)p->cont)->scheduler.context[cpuid()]);
+
+                }
                 assert(p->state!=RUNNING);
                 c->proc=0;
+                yield_scheduler(this);
             }
             release_ptable_lock(this);
         }
@@ -86,11 +91,14 @@ static void sched_simple(struct scheduler *this) {
 
 static struct proc *alloc_pcb_simple(struct scheduler *this) {
     acquire_ptable_lock(this);
+    struct proc* p;
     for(int i=0;i<NPROC;i++){
-        if(this->ptable.proc[i].state==UNUSED){
-            this->ptable.proc[i].pid=i+1;
+        p=&(this->ptable.proc[i]);
+        if(p->state==UNUSED){
+            p->state=EMBRYO;
+            p->pid=alloc_resource(this->cont,p,PID);
             release_ptable_lock(this);
-            return &(this->ptable.proc[i]);
+            return p;
         }
     }
     release_ptable_lock(this);

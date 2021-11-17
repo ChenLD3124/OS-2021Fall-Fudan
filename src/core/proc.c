@@ -29,7 +29,6 @@ static struct proc *alloc_proc() {
     /* DONE: Lab3 Process */
     p=alloc_pcb();
     if(p==0)return 0;
-    p->state=EMBRYO;
     p->kstack=kalloc()+PAGE_SIZE;
     if(p->kstack==PAGE_SIZE){
         p->state=UNUSED;
@@ -114,14 +113,29 @@ void yield() {
  * Reacquires lock when awakened.
  */
 void sleep(void *chan, SpinLock *lock) {
-    /* TODO: lab6 container */
-
+    /* DONE: lab6 container */
+    struct proc* p=thiscpu()->proc;
+    acquire_sched_lock();
+    p->chan=chan;
+    p->state=SLEEPING;
+    sched();
+    p->chan=0;
+    release_sched_lock();
 }
 
 /* Wake up all processes sleeping on chan. */
 void wakeup(void *chan) {
-    /* TODO: lab6 container */
-
+    /* DONE: lab6 container */
+    acquire_sched_lock();
+    struct proc* cp=thiscpu()->proc;
+    struct proc* p;
+    for(int i=0;i<NPROC;i++){
+        p=&thiscpu()->scheduler->ptable.proc[i];
+        if(p!=cp&&p->state==SLEEPING&&p->chan==chan){
+            p->state=RUNNABLE;
+        }
+    }
+    release_sched_lock();
 }
 
 /* 
@@ -130,7 +144,7 @@ void wakeup(void *chan) {
  */
 void add_loop_test(int times) {
     for (int i = 0; i < times; i++) {
-        /* TODO: lab6 container */
-
+        /* DONE: lab6 container */
+        spawn_init_process();
     }
 }
