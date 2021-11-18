@@ -96,6 +96,7 @@ static struct proc *alloc_pcb_simple(struct scheduler *this) {
         p=&(this->ptable.proc[i]);
         if(p->state==UNUSED){
             p->state=EMBRYO;
+            printf("%d\n",i);
             p->pid=alloc_resource(this->cont,p,PID);
             release_sched_lock(this);
             return p;
