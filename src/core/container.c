@@ -36,13 +36,15 @@ struct container *alloc_container(bool root) {
     /* DONE: lab6 container */
     struct container *c;
     c=(container*)alloc_object(&arena);
+    if(c==0)PANIC("no arena!!");
+    init_spinlock(&c->lock,"container");
+    c->scheduler.cont=c;
     if(root==1)return c;
 
     c->p=alloc_pcb();
     if(c->p==0)return 0;
     c->p->is_scheduler=1;
     c->p->cont=c;
-    c->p->state=EMBRYO;
     c->p->kstack=kalloc()+PAGE_SIZE;
     if(c->p->kstack==PAGE_SIZE){
         c->p->state=UNUSED;
@@ -67,8 +69,8 @@ void init_container() {
     init_arena(&arena, sizeof(container), allocator);
     root_container=alloc_container(1);
     root_container->parent=root_container;
-    root_container->scheduler.cont=&root_container;
     root_container->scheduler.op=&simple_op;
+    root_container->scheduler.parent=&root_container->scheduler;
     root_container->scheduler.op->init();
 }
 
@@ -78,23 +80,27 @@ void init_container() {
  */
 void *alloc_resource(struct container *this, struct proc *p, resource_t resource) {
     /* DONE: lab6 container */
-    void* trn;
     switch(resource){
         case PID:{
             int i;
             for(i=0;i<NPID;i++){
-                if(this->pmap[i].valid==1)continue;
-                this->pmap[i].valid=1;
-                this->pmap[i].pid_local=++(this->scheduler.pid);
-                this->pmap[i].p=p;
+                if(this->pmap[i].valid!=1){
+                    this->pmap[i].valid=1;
+                    this->pmap[i].pid_local=++(this->scheduler.pid);
+                    this->pmap[i].p=p;
+                    break;
+                }
             }
             if(i==NPID)PANIC("has no pid map!!");
-            trn=(void*)i;
             break;
         }
-        default:trn=(void*)0;
+        default:;
     }
-    if(this->parent!=this)alloc_resource(this->parent,p,resource);
+    if(this->parent!=this){
+        acquire_spinlock(&this->parent->lock);
+        alloc_resource(this->parent,p,resource);
+        release_spinlock(&this->parent->lock);
+    }
     return (void*)this->scheduler.pid;
 }
 
@@ -123,6 +129,7 @@ void container_test_init() {
 
     do_cont_test = true;
     add_loop_test(1);
+    printf("1111\n");
     c = spawn_container(root_container, &simple_op);
     assert(c != NULL);
 }

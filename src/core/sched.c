@@ -90,18 +90,18 @@ static void sched_simple(struct scheduler *this) {
 }
 
 static struct proc *alloc_pcb_simple(struct scheduler *this) {
-    acquire_ptable_lock(this);
+    acquire_sched_lock();
     struct proc* p;
     for(int i=0;i<NPROC;i++){
         p=&(this->ptable.proc[i]);
         if(p->state==UNUSED){
             p->state=EMBRYO;
             p->pid=alloc_resource(this->cont,p,PID);
-            release_ptable_lock(this);
+            release_sched_lock(this);
             return p;
         }
     }
-    release_ptable_lock(this);
+    release_sched_lock(this);
     return 0;
 }
 

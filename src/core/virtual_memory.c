@@ -144,7 +144,7 @@ int my_uvm_map(PTEntriesPtr pgdir, void *va, size_t sz, uint64_t pa) {
         PTEntriesPtr tmp=my_pgdir_walk(pgdir,va,1);
         // _assert(tmp!=0,"map:walk failed");
         if(tmp==0)return -1;
-        PTE entry=PTEinit(*tmp,3);
+        PTE entry=PTEinit(*tmp,3);//0xffff000000082980
         _assert(entry.V==0,"reused");
         entry.pa=pa>>12;
         entry.T=1;

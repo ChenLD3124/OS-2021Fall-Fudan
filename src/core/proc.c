@@ -28,6 +28,7 @@ static struct proc *alloc_proc() {
     struct proc *p;
     /* DONE: Lab3 Process */
     p=alloc_pcb();
+
     if(p==0)return 0;
     p->kstack=kalloc()+PAGE_SIZE;
     if(p->kstack==PAGE_SIZE){
@@ -57,7 +58,7 @@ void spawn_init_process() {
     struct proc *p;
     extern char icode[], eicode[];
     p = alloc_proc();
-    
+    if(p==0)PANIC("alloc proc fail!!");
     /* DONE: Lab3 Process */
     p->pgdir=pgdir_init();
     char * initcode=(char*)kalloc();

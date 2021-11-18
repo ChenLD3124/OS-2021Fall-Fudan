@@ -64,10 +64,15 @@ void main() {
 	/* DONE: Lab3 uncomment to test interrupt */
     // test_kernel_interrupt();
     if (cpuid() == 0) {
+        printf("111\n");
         spawn_init_process();
+        printf("222\n");
+
+        while(1);
         container_test_init();
         enter_scheduler();
     } else {
+        while(1);
         enter_scheduler();
     }
 
