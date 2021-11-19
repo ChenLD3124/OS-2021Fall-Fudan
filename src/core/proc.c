@@ -33,6 +33,7 @@ static struct proc *alloc_proc() {
     p->kstack=kalloc()+PAGE_SIZE;
     if(p->kstack==PAGE_SIZE){
         p->state=UNUSED;
+        PANIC("no kstack!!");
         return 0;
     }
     void* sp=p->kstack;
@@ -56,13 +57,13 @@ static struct proc *alloc_proc() {
  */
 void spawn_init_process() {
     struct proc *p;
-    extern char icode[], eicode[];
+    extern char loop_start[], loop_end[];
     p = alloc_proc();
     if(p==0)PANIC("alloc proc fail!!");
     /* DONE: Lab3 Process */
     p->pgdir=pgdir_init();
     char * initcode=(char*)kalloc();
-    memcpy(initcode,icode,eicode-icode);
+    memcpy(initcode,loop_start,loop_end-loop_start);
     strncpy(p->name,"init_process",sizeof(p->name));
     uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
     p->tf->ELR_EL1=0;
@@ -88,9 +89,9 @@ void forkret() {
  * until its parent calls wait() to find out it exited.
  */
 void exit() {
+    acquire_sched_lock();
     struct proc *p = thiscpu()->proc;
     /* DONE: Lab3 Process */
-    acquire_sched_lock();
 	p->state=ZOMBIE;
     sched();
     _assert(1==0,"zombie exit!");
@@ -102,8 +103,8 @@ void exit() {
  */
 void yield() {
     /* DONE: lab6 container */
-    struct  proc *p=thiscpu()->proc;
     acquire_sched_lock();
+    struct  proc *p=thiscpu()->proc;
     p->state=RUNNABLE;
     sched();
     release_sched_lock();
@@ -115,8 +116,8 @@ void yield() {
  */
 void sleep(void *chan, SpinLock *lock) {
     /* DONE: lab6 container */
-    struct proc* p=thiscpu()->proc;
     acquire_sched_lock();
+    struct proc* p=thiscpu()->proc;
     p->chan=chan;
     p->state=SLEEPING;
     sched();

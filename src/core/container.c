@@ -19,7 +19,8 @@ extern void add_loop_test(int times);
 static NO_RETURN void container_entry() {
     /* DONE: lab6 container */
     release_sched_lock();
-    thiscpu()->scheduler=&((container*)thiscpu()->proc->cont)->scheduler;
+    thiscpu()->scheduler=&(((container*)thiscpu()->proc->cont)->scheduler);
+    if(do_cont_test)add_loop_test(2);
     enter_scheduler();
 	/* container_entry should enter scheduler and should not return */
     PANIC("scheduler should not return");
@@ -37,22 +38,17 @@ struct container *alloc_container(bool root) {
     struct container *c;
     c=(container*)alloc_object(&arena);
     if(c==0)PANIC("no arena!!");
-    init_spinlock(&c->lock,"container");
+    init_spinlock(&(c->lock),"container");
     c->scheduler.cont=c;
     if(root==1)return c;
 
     c->p=alloc_pcb();
     if(c->p==0)return 0;
     c->p->is_scheduler=1;
-    c->p->cont=c;
-    c->p->kstack=kalloc()+PAGE_SIZE;
-    if(c->p->kstack==PAGE_SIZE){
-        c->p->state=UNUSED;
-        return 0;
-    }
-    void* sp=c->p->kstack;
+    c->p->cont=(void*)c;
+    void* sp;
     for(int i=0;i<NCPU;i++){
-        sp-=sizeof(context);
+        sp=(void*)((u64)kalloc()+PAGE_SIZE-sizeof(context));
         c->scheduler.context[i]=sp;
         c->scheduler.context[i]->x30=(u64)container_entry;
     }
@@ -70,8 +66,8 @@ void init_container() {
     root_container=alloc_container(1);
     root_container->parent=root_container;
     root_container->scheduler.op=&simple_op;
-    root_container->scheduler.parent=&root_container->scheduler;
-    root_container->scheduler.op->init();
+    root_container->scheduler.parent=&(root_container->scheduler);
+    root_container->scheduler.op->init(&(root_container->scheduler));
 }
 
 /* 
@@ -80,6 +76,7 @@ void init_container() {
  */
 void *alloc_resource(struct container *this, struct proc *p, resource_t resource) {
     /* DONE: lab6 container */
+    acquire_spinlock(&this->lock);
     switch(resource){
         case PID:{
             int i;
@@ -92,15 +89,13 @@ void *alloc_resource(struct container *this, struct proc *p, resource_t resource
                 }
             }
             if(i==NPID)PANIC("has no pid map!!");
-            break;
-        }
+        }break;
         default:;
     }
     if(this->parent!=this){
-        acquire_spinlock(&this->parent->lock);
-        alloc_resource(this->parent,p,resource);
-        release_spinlock(&this->parent->lock);
+        alloc_resource(this->parent,p,resource);    
     }
+    release_spinlock(&this->lock);
     return (void*)this->scheduler.pid;
 }
 
@@ -114,7 +109,8 @@ struct container *spawn_container(struct container *this, struct sched_op *op) {
     c->parent=this;
     c->scheduler.cont=c;
     c->scheduler.op=op;
-    c->scheduler.op->init();
+    c->scheduler.parent=&(this->scheduler);
+    c->scheduler.op->init(&c->scheduler);
 
     strncpy(c->p->name,"container",sizeof(c->p->name));
     c->p->parent=this->p;
@@ -129,7 +125,6 @@ void container_test_init() {
 
     do_cont_test = true;
     add_loop_test(1);
-    printf("1111\n");
     c = spawn_container(root_container, &simple_op);
     assert(c != NULL);
 }

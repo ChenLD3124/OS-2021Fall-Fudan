@@ -15,6 +15,9 @@ u64 syscall_dispatch(Trapframe *frame) {
         case SYS_myexit:{
             sys_myexit();
         }break;
+        case SYS_myprint:{
+            sys_myprint(frame->x0);
+        }break;
         default:_assert(1==2,"do not have this syscal!");
     }
     return 0;

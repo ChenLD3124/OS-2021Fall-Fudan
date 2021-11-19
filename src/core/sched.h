@@ -128,6 +128,7 @@ static INLINE void init_sched() {
 
 static INLINE void init_cpu(struct scheduler *scheduler) {
     thiscpu()->scheduler = scheduler;
+    thiscpu()->proc=0;
     //     init_sched();
 }
 

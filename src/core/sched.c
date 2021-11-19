@@ -42,24 +42,26 @@ static void release_ptable_lock(struct scheduler *this) {
  */
 void yield_scheduler(struct scheduler *this) {
     if(this->parent==this)return;
+    acquire_ptable_lock(this->parent);//parents' lock
     thiscpu()->scheduler=this->parent;
-    acquire_sched_lock();//parents' lock
-    swtch(this->context[cpuid()],this->parent->context[cpuid()]);
-    release_sched_lock();
+    this->cont->p->state=RUNNABLE;
+    release_ptable_lock(this);
+    swtch(&(this->context[cpuid()]),this->parent->context[cpuid()]);
+    acquire_ptable_lock(this);
+    thiscpu()->scheduler=this;
+    release_ptable_lock(this->parent);
 }
 
 void scheduler_simple(struct scheduler *this) {
     struct proc *p;
     struct cpu *c = thiscpu();
-    c->proc = NULL;
-
+    c->proc = this->cont->p;
     for (;;) {
         /* Loop over process table looking for process to run. */
         for(int i=0;i<NPROC;i++){
-            acquire_ptable_lock(this);
+            acquire_sched_lock();
             p=&(this->ptable.proc[i]);
             if(p->state==RUNNABLE){
-                if(c->proc)c->proc->state=RUNNABLE;
                 p->state=RUNNING;
                 c->proc=p;
                 if(p->is_scheduler==0){
@@ -67,15 +69,18 @@ void scheduler_simple(struct scheduler *this) {
                     swtch(&(c->scheduler->context[cpuid()]),p->context);
                 }
                 else{
-                    swtch(&c->scheduler->context[cpuid()],&((container*)p->cont)->scheduler.context[cpuid()]);
-
+                    swtch(&(c->scheduler->context[cpuid()]),((container*)p->cont)->scheduler.context[cpuid()]);
                 }
                 assert(p->state!=RUNNING);
-                c->proc=0;
+                c->proc=this->cont->p;
                 yield_scheduler(this);
+                c->proc=this->cont->p;
             }
-            release_ptable_lock(this);
+            release_sched_lock();
         }
+        acquire_sched_lock();
+        yield_scheduler(this);
+        release_sched_lock();
     }
 }
 
@@ -96,13 +101,12 @@ static struct proc *alloc_pcb_simple(struct scheduler *this) {
         p=&(this->ptable.proc[i]);
         if(p->state==UNUSED){
             p->state=EMBRYO;
-            printf("%d\n",i);
             p->pid=alloc_resource(this->cont,p,PID);
-            release_sched_lock(this);
+            release_sched_lock();
             return p;
         }
     }
-    release_sched_lock(this);
+    release_sched_lock();
     return 0;
 }
 
