@@ -117,12 +117,14 @@ void yield() {
 void sleep(void *chan, SpinLock *lock) {
     /* DONE: lab6 container */
     acquire_sched_lock();
+    release_spinlock(lock);
     struct proc* p=thiscpu()->proc;
     p->chan=chan;
     p->state=SLEEPING;
     sched();
     p->chan=0;
     release_sched_lock();
+    acquire_spinlock(lock);
 }
 
 /* Wake up all processes sleeping on chan. */
