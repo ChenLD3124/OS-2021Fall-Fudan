@@ -57,13 +57,15 @@ static struct proc *alloc_proc() {
  */
 void spawn_init_process() {
     struct proc *p;
-    extern char loop_start[], loop_end[];
+    // extern char loop_start[], loop_end[];
+    extern char ispin[], eicode[];
     p = alloc_proc();
     if(p==0)PANIC("alloc proc fail!!");
     /* DONE: Lab3 Process */
     p->pgdir=pgdir_init();
     char * initcode=(char*)kalloc();
-    memcpy(initcode,loop_start,loop_end-loop_start);
+    // memcpy(initcode,loop_start,loop_end-loop_start);
+    memcpy(initcode,ispin,eicode-ispin);
     strncpy(p->name,"init_process",sizeof(p->name));
     uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
     p->tf->ELR_EL1=0;
@@ -77,9 +79,13 @@ void spawn_init_process() {
 /*
  * A fork child will first swtch here, and then "return" to user space.
  */
+extern int xxxx=0;
+
 void forkret() {
 	/* DONE: Lab3 Process */
     release_sched_lock();
+    if(xxxx==1) sd_test();
+    xxxx=1;
     return;
 }
 

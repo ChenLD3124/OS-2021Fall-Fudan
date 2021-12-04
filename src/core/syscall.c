@@ -19,7 +19,10 @@ u64 syscall_dispatch(Trapframe *frame) {
         case SYS_myprint:{
             sys_myprint(frame->x0);
         }break;
-        default:_assert(1==2,"do not have this syscal!");
+        case SYS_myyield:{
+            yield();
+        }break;
+        default:printf("%d\n",frame->x8);_assert(1==2,"do not have this syscal!");
     }
     return 0;
 }

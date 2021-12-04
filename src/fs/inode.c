@@ -135,7 +135,7 @@ static Inode *inode_get(usize inode_no) {
     inode_unlock(mip);
     // mip->valid=1;
     assert(mip->valid==1);
-    merge_list(hp,&(mip->node));
+    merge_list(hp,&(mip->node));//head->next=mip->node
     release_spinlock(&lock);
     return mip;
 }
