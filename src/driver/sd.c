@@ -499,7 +499,7 @@ static int sdBaseClock;
  * See https://en.wikipedia.org/wiki/Master_boot_record
  */
 
-struct buf sdque;
+// struct buf sdque;
 struct SpinLock sdlock;
 
 void sd_init() {

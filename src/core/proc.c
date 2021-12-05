@@ -79,13 +79,13 @@ void spawn_init_process() {
 /*
  * A fork child will first swtch here, and then "return" to user space.
  */
-extern int xxxx=0;
+static int sd_test_num=0;
 
 void forkret() {
 	/* DONE: Lab3 Process */
     release_sched_lock();
-    if(xxxx==1) sd_test();
-    xxxx=1;
+    if(sd_test_num!=0) sd_test();
+    sd_test_num=1;
     return;
 }
 

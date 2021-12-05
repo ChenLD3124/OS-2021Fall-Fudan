@@ -34,6 +34,7 @@ queue* alloc_queue(){
     queue* q=alloc_object(&arena);
     assert(q!=0);
     q->op=&myqueue_op;
+    q->size=0;
     init_spinlock(&(q->lock),"queue");
     init_list_node(&q->head);
     return q;
@@ -43,12 +44,14 @@ queue* alloc_queue(){
 void queue_push(queue* this,ListNode* node){
     init_list_node(node);
     merge_list(node,&this->head);
+    (this->size)++;
 }
 
 // pop a node
 void queue_pop(queue* this){
     assert(this->op->empty(this)!=1);
     detach_from_list(this->head.next);
+    (this->size)--;
 }
 // first node
 ListNode* queue_front(queue* this){

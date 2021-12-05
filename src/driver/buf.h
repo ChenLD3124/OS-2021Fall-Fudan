@@ -11,7 +11,6 @@
 #define B_DIRTY 0x4 /* Buffer needs to be written to disk. */
 
 queue* buf_queue=0;
-int buf_queue_num;
 struct buf {
     int flags;
     u32 blockno;
@@ -33,12 +32,11 @@ struct buf {
 
 void init_bufq(){
     buf_queue=alloc_queue();
-    buf_queue_num=0;
     assert(buf_queue!=0);
 }
 
 bool bufq_empty(){
-    if(buf_queue->op->empty(buf_queue))assert(buf_queue_num==0);
+    if(buf_queue->op->empty(buf_queue))assert(buf_queue->size==0);
     return buf_queue->op->empty(buf_queue);
 }
 struct buf* bufq_front(){
@@ -50,12 +48,10 @@ struct buf* bufq_back(){
 }
 void bufq_push(struct buf* buffer){
     buf_queue->op->push(buf_queue,&buffer->node);
-    buf_queue_num++;
 }
 void bufq_pop(){
     assert(bufq_empty()==0);
     buf_queue->op->pop(buf_queue);
-    buf_queue_num--;
 }
 void acquire_bufq_lock(){
     acquire_spinlock(&(buf_queue->lock));

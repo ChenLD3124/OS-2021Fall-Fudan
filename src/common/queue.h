@@ -10,6 +10,7 @@
 typedef struct queue {
     ListNode head;
     SpinLock lock;
+    u32 size;
     struct queue_op *op;
 } queue;
 struct queue_op{
