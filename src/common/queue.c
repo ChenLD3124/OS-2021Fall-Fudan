@@ -14,10 +14,25 @@ void init_queue(){
     ArenaPageAllocator allocator = {.allocate = kalloc, .free = kfree};
     init_arena(&arena, sizeof(queue), allocator);
     is_init=1;
+    test_queue();
+}
+void test_queue(){
+    queue* q=alloc_queue();
+    static ListNode nodes[1005];
+    for(int i=0;i<1000;i++){
+        q->op->push(q,&nodes[i]);
+    }
+    for(int i=0;i<1000;i++){
+        assert(q->op->front(q)==&nodes[i]);
+        q->op->pop(q);
+    }
+    assert(q->op->empty(q));
+    printf("queue test pass\n");
 }
 queue* alloc_queue(){
     assert(is_init==1);
     queue* q=alloc_object(&arena);
+    assert(q!=0);
     q->op=&myqueue_op;
     init_spinlock(&(q->lock),"queue");
     init_list_node(&q->head);

@@ -23,6 +23,7 @@ struct queue_op{
 
 // initialize a queue
 void init_queue();
+void test_queue();
 queue* alloc_queue();
 
 // push a node
