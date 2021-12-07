@@ -67,7 +67,7 @@ void main() {
     // test_kernel_interrupt();
     if (cpuid() == 0) {
         spawn_init_process();
-        spawn_init_process();
+        for(int i=0;i<4;i++) spawn_init_process();
         // container_test_init();
         enter_scheduler();
     } else {

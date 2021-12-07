@@ -501,6 +501,8 @@ static int sdBaseClock;
 
 // struct buf sdque;
 struct SpinLock sdlock;
+static Arena test_arena;
+static SpinLock test_lock;
 
 void sd_init() {
     /*
@@ -511,6 +513,10 @@ void sd_init() {
     sdInit();
     init_spinlock(&sdlock,"sd lock");
     init_bufq();
+
+    ArenaPageAllocator allocator = {.allocate = kalloc, .free = kfree};
+    init_arena(&test_arena, sizeof(struct buf), allocator);
+    init_spinlock(&test_lock,"sdtestlock");
     /*
      * Read and parse 1st block (MBR) and collect whatever
      * information you wan.
@@ -671,11 +677,19 @@ void sdrw(struct buf *b) {
 }
 
 /* SD card test and benchmark. */
+static u32 test_offset=0;
 void sd_test() {
-    static struct buf b[1 << 11];
-    int n = sizeof(b) / sizeof(b[0]);
+    // static struct buf b[1 << 11];
+    // int n = sizeof(b) / sizeof(b[0]);
+    acquire_spinlock(&test_lock);
+    u32 n=1<<11;
+    test_offset+=n;
+    u32 offset=test_offset;
+    release_spinlock(&test_lock);
     int mb = (n * BSIZE) >> 20;
     assert(mb);
+    struct buf* b0=alloc_object(&test_arena);
+    struct buf* bnow=alloc_object(&test_arena);
     i64 f, t;
     asm volatile("mrs %[freq], cntfrq_el0" : [freq] "=r"(f));
     printf("- sd test: begin nblocks %d\n", n);
@@ -684,26 +698,26 @@ void sd_test() {
     // Read/write test
     for (int i = 1; i < n; i++) {
         // Backup.
-        b[0].flags = 0;
-        b[0].blockno = (u32)i;
-        sdrw(&b[0]);
+        b0->flags = 0;
+        b0->blockno = offset-(u32)i;
+        sdrw(b0);
         // Write some value.
-        b[i].flags = B_DIRTY;
-        b[i].blockno = (u32)i;
+        bnow->flags = B_DIRTY;
+        bnow->blockno = offset-(u32)i;
         for (int j = 0; j < BSIZE; j++)
-            b[i].data[j] = (u8)((i * j) & 0xFF);
-        sdrw(&b[i]);
+            bnow->data[j] = (u8)((i * j) & 0xFF);
+        sdrw(bnow);
 
-        memset(b[i].data, 0, sizeof(b[i].data));
+        memset(bnow->data, 0, sizeof(bnow->data));
         // Read back and check
-        b[i].flags = 0;
-        sdrw(&b[i]);
+        bnow->flags = 0;
+        sdrw(bnow);
         for (int j = 0; j < BSIZE; j++) {
-            assert(b[i].data[j] == (i * j & 0xFF));
+            assert(bnow->data[j] == (i * j & 0xFF));
         }
         // Restore previous value.
-        b[0].flags = B_DIRTY;
-        sdrw(&b[0]);
+        b0->flags = B_DIRTY;
+        sdrw(b0);
     }
 
     // Read benchmark
@@ -711,9 +725,9 @@ void sd_test() {
     t = (i64)timestamp();
     disb();
     for (int i = 0; i < n; i++) {
-        b[i].flags = 0;
-        b[i].blockno = (u32)i;
-        sdrw(&b[i]);
+        bnow->flags = 0;
+        bnow->blockno = offset-(u32)i;
+        sdrw(bnow);
     }
     disb();
     t = (i64)timestamp() - t;
@@ -730,9 +744,9 @@ void sd_test() {
     t = (i64)timestamp();
     disb();
     for (int i = 0; i < n; i++) {
-        b[i].flags = B_DIRTY;
-        b[i].blockno = (u32)i;
-        sdrw(&b[i]);
+        bnow->flags = B_DIRTY;
+        bnow->blockno = offset-(u32)i;
+        sdrw(bnow);
     }
     disb();
     t = (i64)timestamp() - t;
