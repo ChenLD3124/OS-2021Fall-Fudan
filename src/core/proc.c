@@ -83,9 +83,10 @@ static int sd_test_num=0;
 
 void forkret() {
 	/* DONE: Lab3 Process */
-    release_sched_lock();
-    if(sd_test_num!=0) sd_test();
+    u32 now=sd_test_num;
     sd_test_num=1;
+    release_sched_lock();
+    if(now!=0) sd_test();
     return;
 }
 
