@@ -149,7 +149,7 @@ void wakeup(void *chan) {
     release_sched_lock();
 }
 
-/* 
+/*
  * Add process at thiscpu()->container,
  * execute code in src/user/loop.S
  */
