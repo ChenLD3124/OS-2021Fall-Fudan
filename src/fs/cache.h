@@ -22,6 +22,7 @@ typedef struct {
     usize block_no;
     ListNode node;
     bool acquired;  // is the block already acquired by some thread?
+    u32 refcnt;
     bool pinned;    // if a block is pinned, it should not be evicted from the cache.
 
     SleepLock lock;  // this lock protects `valid` and `data`.
@@ -31,10 +32,11 @@ typedef struct {
 
 // `OpContext` represents an atomic operation.
 // see `begin_op` and `end_op`.
-typedef struct {
+typedef struct {//cld:with log.lock
     usize ts;  // the timestamp/identifier allocated by `begin_op`.
 
     // hint: you may want to add something else here.
+    u32 remain_num;
 } OpContext;
 
 typedef struct BlockCache {
