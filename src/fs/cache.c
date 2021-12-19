@@ -148,6 +148,7 @@ static void cache_release(Block *block) {
     // DONE:
     release_sleeplock(&block->lock);
     acquire_spinlock(&lock);
+    assert(block->refcnt>0);
     block->refcnt--;
     release_spinlock(&lock);
 }
