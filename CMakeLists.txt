@@ -48,3 +48,13 @@ add_custom_target(debug
             -ex "target remote localhost:1234"
             -ex "source /root/data/OS-2021Fall-Fudan/pwndbg/gdbinit.py"
     DEPENDS kernel)
+add_custom_target(init_libc
+	COMMAND git submodule update --init && cd ../libc &&
+			 export CROSS_COMPILE=${aarch64_prefix} &&
+			 ./configure --target=aarch64)
+
+set(LIBC_SPEC ${CMAKE_CURRENT_SOURCE_DIR}/libc/lib/musl-gcc.specs)
+set(LIBC_SPEC_OUT musl-gcc.specs)
+add_custom_target(libc
+	COMMAND make -C ../libc -j12 &&
+	sed -e \"s/\\/usr\\/local\\/musl/..\\/..\\/..\\/libc/g\" ${LIBC_SPEC} > ${LIBC_SPEC_OUT})

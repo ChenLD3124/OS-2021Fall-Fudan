@@ -8,6 +8,10 @@
 #include <core/physical_memory.h>
 #include <core/proc.h>
 #include <core/virtual_memory.h>
+#include <driver/sd.h>
+#include <fs/file.h>
+#include <fs/fs.h>
+#include <fs/inode.h>
 
 void forkret();
 extern void trap_return();
@@ -99,6 +103,7 @@ void exit() {
     acquire_sched_lock();
     struct proc *p = thiscpu()->proc;
     /* DONE: Lab3 Process */
+    /* TODO: Lab9 Shell */
 	p->state=ZOMBIE;
     sched();
     _assert(1==0,"zombie exit!");
@@ -158,4 +163,31 @@ void add_loop_test(int times) {
         /* DONE: lab6 container */
         spawn_init_process();
     }
+}
+
+int growproc(int n) {
+	/* TODO: lab9 shell */
+
+    return 0;
+}
+
+/*
+ * Create a new process copying p as the parent.
+ * Sets up stack to return as if from system call.
+ * Caller must set state of returned proc to RUNNABLE.
+ */
+int fork() {
+    /* TODO: Lab9 shell */
+
+    return 0;
+}
+
+/*
+ * Wait for a child process to exit and return its pid.
+ * Return -1 if this process has no children.
+ */
+int wait() {
+    /* TODO: Lab9 shell. */
+
+    return 0;
 }
