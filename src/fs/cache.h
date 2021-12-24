@@ -21,12 +21,12 @@ typedef struct {
     // of the block cache.
     usize block_no;
     ListNode node;
-    bool acquired;  // is the block already acquired by some thread?
+    // bool acquired;  // is the block already acquired by some thread?
     u32 refcnt;
     bool pinned;    // if a block is pinned, it should not be evicted from the cache.
 
-    SleepLock lock;  // this lock protects `valid` and `data`.
     bool valid;      // is the content of block loaded from disk?
+    SleepLock lock;  // this lock protects `valid` and `data`.
     u8 data[BLOCK_SIZE];
 } Block;
 

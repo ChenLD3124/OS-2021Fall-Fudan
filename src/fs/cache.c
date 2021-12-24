@@ -80,12 +80,13 @@ void init_bcache(const SuperBlock *_sblock, const BlockDevice *_device) {
 static void init_block(Block *block) {
     block->block_no = 0;
     init_list_node(&block->node);
-    block->acquired = false;
+    // block->acquired = false;
     block->refcnt=0;
     block->pinned = false;
 
     init_sleeplock(&block->lock, "block");
     block->valid = false;
+    asserts((u64)(block->data)%8==0,"block->data should Alignment");
     memset(block->data, 0, sizeof(block->data));
 }
 
