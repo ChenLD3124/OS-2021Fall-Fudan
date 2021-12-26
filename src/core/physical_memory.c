@@ -82,13 +82,13 @@ static void init_PMemory(PMemory *pmem_ptr) {
 void init_memory_manager(void) {
     // HACK Raspberry pi 4b.
     // size_t phystop = MIN(0x3F000000, mbox_get_arm_memory());
-    size_t phystop = 0x3F000000;
+    usize phystop = 0x3F000000;
     // notice here for roundup
-    void *ROUNDUP_end = ROUNDUP((void *)end, PAGE_SIZE);
+    void *round_up_end = round_up((void *)end, PAGE_SIZE);
     init_PMemory(&pmem);
     init_spinlock(&pmem.lock, "pmem");
-    // printf("%llx %llx\n",ROUNDUP_end,(void *)P2K(phystop));
-    pmem.page_init(pmem.struct_ptr, ROUNDUP_end, (void *)P2K(phystop));
+    // printf("%llx %llx\n",round_up_end,(void *)P2K(phystop));
+    pmem.page_init(pmem.struct_ptr, round_up_end, (void *)P2K(phystop));
 }
 
 /*

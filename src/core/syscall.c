@@ -79,7 +79,7 @@ const char(*syscall_table_str[NR_SYSCALL]) = {[0 ... NR_SYSCALL - 1] = "sys_defa
 
 u64 syscall_dispatch(Trapframe *frame) {
     /* TODO: Lab9 Shell */
-    int sysno;
+    int sysno=frame->x8;
     if (sysno < 400) printf("%d %s\n", sysno, syscall_table_str[sysno]);
 	syscall_table[sysno]();
 
@@ -130,7 +130,7 @@ int argint(int n, int *ip) {
         case 3:*ip = proc->tf->x3;break;
         case 4:*ip = proc->tf->x4;break;
         case 5:*ip = proc->tf->x5;break;
-        default:return -1;
+        default:PANIC("no x6");return -1;
     }
     return 0;
 }
@@ -149,7 +149,7 @@ int argu64(int n, u64 *ip) {
         case 3:*ip = proc->tf->x3;break;
         case 4:*ip = proc->tf->x4;break;
         case 5:*ip = proc->tf->x5;break;
-        default:return -1;
+        default:PANIC("no x6");return -1;
     }
     return 0;
 }

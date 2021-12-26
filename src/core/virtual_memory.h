@@ -13,12 +13,12 @@
  */
 //my struct
 typedef struct{
-    uint16_t an[4];
+    u16 an[4];
 } IA;
 typedef struct{
-    uint8_t V,T;
-    uint64_t pa;
-    uint16_t Uattr,Lattr;
+    u8 V,T;
+    u64 pa;
+    u16 Uattr,Lattr;
 } PTE;
 
 //
@@ -29,22 +29,22 @@ typedef struct {
     void (*vm_free)(PTEntriesPtr pgdir);
     int (*uvm_map)(PTEntriesPtr pgdir,
                    void *kernel_address,
-                   size_t size,
-                   uint64_t physical_address);
-    int (*uvm_alloc)(PTEntriesPtr pgdir, size_t base, size_t stksz, size_t oldsz, size_t newsz);
-    int (*uvm_dealloc)(PTEntriesPtr pgdir, size_t base, size_t oldsz, size_t newsz);
-    int (*copyout)(PTEntriesPtr pgdir, void *tgt_address, void *src_address, size_t len);
+                   usize size,
+                   u64 physical_address);
+    int (*uvm_alloc)(PTEntriesPtr pgdir, usize base, usize stksz, usize oldsz, usize newsz);
+    int (*uvm_dealloc)(PTEntriesPtr pgdir, usize base, usize oldsz, usize newsz);
+    int (*copyout)(PTEntriesPtr pgdir, void *tgt_address, void *src_address, usize len);
 } VMemory;
 
 PTEntriesPtr pgdir_init(void);
 PTEntriesPtr pgdir_walk(PTEntriesPtr pgdir, void *kernel_address, int alloc);
 PTEntriesPtr uvm_copy(PTEntriesPtr pgdir);
 void vm_free(PTEntriesPtr pgdir);
-int uvm_map(PTEntriesPtr pgdir, void *kernel_address, size_t size, uint64_t physical_address);
-int uvm_alloc(PTEntriesPtr pgdir, size_t base, size_t stksz, size_t oldsz, size_t newsz);
-int uvm_dealloc(PTEntriesPtr pgdir, size_t base, size_t oldsz, size_t newsz);
+int uvm_map(PTEntriesPtr pgdir, void *kernel_address, usize size, u64 physical_address);
+int uvm_alloc(PTEntriesPtr pgdir, usize base, usize stksz, usize oldsz, usize newsz);
+int uvm_dealloc(PTEntriesPtr pgdir, usize base, usize oldsz, usize newsz);
 void uvm_switch(PTEntriesPtr pgdir);
-int copyout(PTEntriesPtr pgdir, void *tgt_address, void *src_address, size_t len);
+int copyout(PTEntriesPtr pgdir, void *tgt_address, void *src_address, usize len);
 void virtual_memory_init(VMemory *);
 void init_virtual_memory();
 void vm_test();

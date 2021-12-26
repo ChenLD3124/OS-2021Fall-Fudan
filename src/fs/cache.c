@@ -108,6 +108,7 @@ static void cache_limit_capa(){
         if(b->refcnt==0&&b->pinned==false){
             detach_from_list(&b->node);
             bcache_num--;
+            free_object(b);
         }
     }
 }

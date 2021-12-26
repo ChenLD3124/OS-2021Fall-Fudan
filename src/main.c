@@ -62,7 +62,6 @@ void main() {
 	printf("Hello world!\n");
 
     init_system_per_cpu();
-
 	/* DONE: Lab3 uncomment to test interrupt */
     // test_kernel_interrupt();
     if (cpuid() == 0) {

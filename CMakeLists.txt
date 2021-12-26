@@ -46,12 +46,12 @@ add_custom_target(debug
             -ex "set architecture aarch64"
             -ex "file ${kernel_elf}"
             -ex "target remote localhost:1234"
-            -ex "source /root/data/OS-2021Fall-Fudan/pwndbg/gdbinit.py"
+            -ex "source /root/data/pwndbg/gdbinit.py"
     DEPENDS kernel)
 add_custom_target(init_libc
 	COMMAND git submodule update --init && cd ../libc &&
 			 export CROSS_COMPILE=${aarch64_prefix} &&
-			 ./configure --target=aarch64)
+			 ./configure)
 
 set(LIBC_SPEC ${CMAKE_CURRENT_SOURCE_DIR}/libc/lib/musl-gcc.specs)
 set(LIBC_SPEC_OUT musl-gcc.specs)

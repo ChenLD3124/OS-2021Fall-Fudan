@@ -13,10 +13,9 @@
 
 #include <elf.h>
 
-static uint64_t auxv[][2] = {{AT_PAGESZ, PAGE_SIZE}};
+static u64 auxv[][2] = {{AT_PAGESZ, PAGE_SIZE}};
 
 int execve(const char *path, char *const argv[], char *const envp[]) {
 	/* TODO: Lab9 Shell */
-	
     return -1;
 }
