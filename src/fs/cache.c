@@ -103,8 +103,9 @@ static usize get_num_cached_blocks() {
 static void cache_limit_capa(){
     Block* b=NULL;
     for(ListNode *pre=head.prev;bcache_num>=
-        EVICTION_THRESHOLD&&pre!=&head;pre=pre->prev){
+        EVICTION_THRESHOLD&&pre!=&head;){
         b=container_of(pre,Block,node);
+        pre=pre->prev;
         if(b->refcnt==0&&b->pinned==false){
             detach_from_list(&b->node);
             bcache_num--;
