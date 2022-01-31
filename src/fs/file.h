@@ -14,7 +14,7 @@ typedef struct file {
     int ref;
     char readable;
     char writable;
-    struct pipe *pipe;
+    // struct pipe *pipe;
     Inode *ip;
     usize off;
 } File;

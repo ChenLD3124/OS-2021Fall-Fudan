@@ -16,7 +16,7 @@ typedef struct{
     u16 an[4];
 } IA;
 typedef struct{
-    u8 V,T;
+    bool V,T;
     u64 pa;
     u16 Uattr,Lattr;
 } PTE;
@@ -48,5 +48,8 @@ int copyout(PTEntriesPtr pgdir, void *tgt_address, void *src_address, usize len)
 void virtual_memory_init(VMemory *);
 void init_virtual_memory();
 void vm_test();
+// cld:add
+void uvm_clear(PTEntriesPtr pgdir,void* vak);
+u64 V2K(PTEntriesPtr pgdir,void* va);
 
 #endif

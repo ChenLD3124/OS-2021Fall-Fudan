@@ -9,8 +9,9 @@ int sys_gettid() {
     return thiscpu()->proc->pid;
 }
 int sys_ioctl() {
-	/* TODO: Lab9 Shell */
+	/* DONE: Lab9 Shell */
     /* Assert tf->x1 == 0x5413 */
+    asserts(thiscpu()->proc->tf->x1==0x5413,"sys_ioctl error!");
     return 0;
 }
 int sys_sigprocmask() {
@@ -78,12 +79,11 @@ const char(*syscall_table_str[NR_SYSCALL]) = {[0 ... NR_SYSCALL - 1] = "sys_defa
                                               [SYS_myyield] = "sys_yield"};
 
 u64 syscall_dispatch(Trapframe *frame) {
-    /* TODO: Lab9 Shell */
+    /* DONE: Lab9 Shell */
     int sysno=frame->x8;
     if (sysno < 400) printf("%d %s\n", sysno, syscall_table_str[sysno]);
-	syscall_table[sysno]();
-
-    return 0;
+	frame->x0=syscall_table[sysno]();
+    return frame->x0;
 }
 
 #ifndef USPACE_TOP

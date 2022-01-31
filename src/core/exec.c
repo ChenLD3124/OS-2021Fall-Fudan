@@ -10,6 +10,7 @@
 #include <core/proc.h>
 #include <core/sched.h>
 #include <core/virtual_memory.h>
+#include <common/string.h>
 
 #include <elf.h>
 
@@ -90,7 +91,101 @@ static u64 auxv[][2] = {{AT_PAGESZ, PAGE_SIZE}};
  * (2) Adresss of the main function: that's stored in memory (loaded in part2)
  *
  */
+static int loadseg(PTEntriesPtr pgdir,u64 va,Inode *ip,u32 offset,u32 sz){
+    u64 pa;
+    asserts(va%PAGE_SIZE==0,"loadseg error,va!");
+    for(u32 i=0,n;i<sz;i+=PAGE_SIZE){
+        pa = V2K(pgdir,va+i);
+        asserts(pa!=0,"loadseg error!");
+        n=MIN(PAGE_SIZE,sz-i);
+        if(inodes.read(ip,(u8*)pa,offset+i,n)!=n)return -1;
+    }
+    return 0;
+}
+
 int execve(const char *path, char *const argv[], char *const envp[]) {
-	/* TODO: Lab9 Shell */
+	/* DONE: Lab9 Shell */
+    Inode* ip=NULL;
+    OpContext ctx;
+    bcache.begin_op(&ctx);
+    ip=namei(path,&ctx);
+    if(ip==0){
+        bcache.end_op(&ctx);
+        return -1;
+    }
+    inodes.lock(ip);
+    // check ELF header
+    Elf64_Ehdr elf;
+    if(inodes.read(ip,(u8*)&elf,0,sizeof(elf))<sizeof(elf))goto bad;
+    if(strncmp((const char*)elf.e_ident, ELFMAG, 4))goto bad;
+    PTEntriesPtr pgdir=pgdir_init();
+    if(pgdir==NULL)goto bad;
+    // load memory
+    Elf64_Phdr ph;
+    u64 sz=0;
+    for(int i=0,off=elf.e_phoff;i<elf.e_phnum;i++,off+=sizeof(ph)){
+        if(inodes.read(ip,(u8*)&ph,off,sizeof(ph)!=sizeof(ph)))goto bad;
+        if(ph.p_type!=PT_LOAD)continue;
+        if(ph.p_memsz<ph.p_filesz)goto bad;
+        if(ph.p_vaddr+ph.p_memsz<ph.p_vaddr)goto bad;
+        if((sz=uvm_alloc(pgdir,0,0,sz,ph.p_vaddr+ph.p_memsz))==0)goto bad;
+        if(ph.p_vaddr%PAGE_SIZE!=0)goto bad;
+        if(loadseg(pgdir,ph.p_vaddr,ip,ph.p_offset,ph.p_filesz)<0)goto bad;
+    }
+    inodes.unlock(ip);
+    bcache.end_op(&ctx);
+    ip=0;
+    sz=round_up(sz,PAGE_SIZE);
+    sz=uvm_alloc(pgdir,0,0,sz,sz+2*PAGE_SIZE);
+    if(sz==0)goto bad;
+    uvm_clear(pgdir,(void*)(sz-2*PAGE_SIZE));
+    u64 sp=sz,stackbase=sz-PAGE_SIZE;
+    int argc=0;
+    u64 ustack[32];
+    for(;argv[argc];argc++){
+        if(argc>=32)goto bad;
+        sp-=strlen(argv[argc])+1;// '\0'
+        sp=round_down(sp,16);
+        if(sp<stackbase)goto bad;
+        if(copyout(pgdir,sp,argv[argc],strlen(argv[argc])+1)<0)goto bad;
+        ustack[argc]=sp;
+    }
+    ustack[argc]=0;
+    struct proc *p=thiscpu()->proc;
+    p->tf->x0=argc;
+
+    sp=round_down(sp,16);
+    // align
+    if(argc%2==0)sp-=8;
+    //---end ,not in stack,a memory place to store argv value,product point
+    // auxv
+    u64 auxv[] = { 0, AT_PAGESZ, PAGE_SIZE, AT_NULL };
+    sp-=sizeof(auxv);
+    if(copyout(pgdir,sp,auxv,sizeof(auxv))<0)goto bad;
+    // env
+    u64 noenv=0;
+    sp-=8;
+    if(copyout(pgdir,sp,&noenv,8)<0)goto bad;
+    // argv
+    sp-=(argc+1)*8;
+    p->tf->x1=sp;
+    if (copyout(pgdir,sp,ustack,(argc+1)*8)<0)goto bad;
+    // argc
+    sp-=8;
+    if (copyout(pgdir,sp,&argc,8)<0)goto bad;
+    asserts(sp%16==0,"exec stack error!");
+    // ---end
+    uint64_t* oldpgdir = p->pgdir;
+    p->pgdir=pgdir;
+    p->sz=sz;
+    p->tf->SP_EL0 = sp;
+    p->tf->ELR_EL1= elf.e_entry;
+    uvm_switch(p->pgdir);
+    vm_free(oldpgdir);
+    return argc;
+
+    bad:
+    if(pgdir)vm_free(pgdir);
+    if(ip)inodes.unlock(ip);
     return -1;
 }

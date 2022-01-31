@@ -420,9 +420,35 @@ static const char *skipelem(const char *path, char *name) {
  * Must be called inside a transaction since it calls iput().
  */
 static Inode *namex(const char *path, int nameiparent, char *name, OpContext *ctx) {
-	/* TODO: Lab9 Shell */
-	
-    return 0;
+	/* DONE: Lab9 Shell */
+	Inode *ip,*nxt;
+    if(*path=='/') ip=inode_get(ROOT_INODE_NO);
+    else{
+        ip=thiscpu()->proc->cwd;
+        inode_share(ip);
+    }
+    while((path=skipelem(path,name))!=0){
+        inode_lock(ip);
+        if(ip->entry.type!=INODE_DIRECTORY){
+            inode_unlock(ip);
+            return 0;
+        }
+        if(nameiparent&&*path=='\0'){
+            inode_unlock(ip);
+            return ip;
+        }
+        if((nxt=inode_lookup(ip,name,0))==0){
+            inode_unlock(ip);
+            return 0;
+        }
+        inode_unlock(ip);
+        ip=nxt;
+    }
+    if(nameiparent){
+        inode_put(ctx,ip);
+        return 0;
+    }
+    return ip;
 }
 
 Inode *namei(const char *path, OpContext *ctx) {
@@ -439,8 +465,12 @@ Inode *nameiparent(const char *path, char *name, OpContext *ctx) {
  * Caller must hold ip->lock.
  */
 void stati(Inode *ip, struct stat *st) {
-    /* TODO: Lab9 Shell */
+    /* DONE: Lab9 Shell */
     st->st_dev = 1;
+    st->st_ino=ip->inode_no;
+    st->st_mode=ip->entry.type;
+    st->st_nlink=ip->entry.num_links;
+    st->st_size=ip->entry.num_bytes;
 
     switch (ip->entry.type) {
         case INODE_REGULAR: st->st_mode = S_IFREG; break;

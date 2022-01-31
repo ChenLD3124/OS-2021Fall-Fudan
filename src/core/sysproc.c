@@ -14,8 +14,12 @@ int sys_yield() {
  * Get the parameters and call growproc.
  */
 usize sys_brk() {
-    /* TODO: Lab9 Shell */
-    return 0;
+    /* DONE: Lab9 Shell */
+    u64 n;
+    if(argint(0, &n)<0)return -1;
+    u64 sz = thiscpu()->proc->sz;
+    if(growproc(n)<0)return -1;
+    return sz;
 }
 
 int sys_clone() {

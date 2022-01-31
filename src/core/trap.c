@@ -41,13 +41,13 @@ void trap_global_handler(Trapframe *frame) {
 			 */
 			/* DONE: Lab3 Syscall */
             syscall_dispatch(frame);
-            // TODO: warn if `iss` is not zero.
+            // NOTE: warn if `iss` is not zero.
 
             (void)iss;
         } break;
 
         default: {
-            // TODO: should exit current process here.
+            // DONE: should exit current process here.
             exit();
             _assert(1==2,"syscal not exit!");
             // exit(1);

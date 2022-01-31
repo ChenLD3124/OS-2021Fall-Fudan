@@ -14,7 +14,21 @@
 #include <fs/inode.h>
 
 void forkret();
+void wakeup_inlock(void *chan);
 extern void trap_return();
+static void free_proc(struct proc *p){
+  if(p->kstack)kfree((void*)p->kstack);
+  if(p->pgdir)vm_free(p->pgdir);
+  p->tf= 0;
+  p->pgdir = 0;
+  p->sz = 0;
+  p->pid = 0;
+  p->parent = 0;
+  p->name[0] = 0;
+  p->chan = 0;
+  p->killed = 0;
+  p->state = UNUSED;
+}
 /*
  * Look through the process table for an UNUSED proc.
  * If found, change state to EMBRYO and initialize
@@ -34,13 +48,13 @@ static struct proc *alloc_proc() {
     p=alloc_pcb();
 
     if(p==0)return 0;
-    p->kstack=kalloc()+PAGE_SIZE;
-    if(p->kstack==PAGE_SIZE){
+    p->kstack=kalloc();
+    if(p->kstack==0){
         p->state=UNUSED;
         PANIC("no kstack!!");
         return 0;
     }
-    void* sp=p->kstack;
+    void* sp=p->kstack+PAGE_SIZE;
     sp-=sizeof(Trapframe);
     p->tf=sp;
     sp-=sizeof(context);
@@ -59,6 +73,7 @@ static struct proc *alloc_proc() {
  * Step 5 (TODO): Set the address after eret to this va.
  * Step 6 (TODO): Set proc->sz.
  */
+struct proc* initproc;
 void spawn_init_process() {
     struct proc *p;
     // extern char loop_start[], loop_end[];
@@ -73,10 +88,11 @@ void spawn_init_process() {
     strncpy(p->name,"init_process",sizeof(p->name));
     uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
     p->tf->ELR_EL1=0;
-    p->tf->SP_EL0=0;
+    p->tf->SP_EL0=PAGE_SIZE;
     p->tf->x30=0;
     p->sz=PAGE_SIZE;
     p->parent=0;
+    initproc=p;
     p->state=RUNNABLE;
 }
 
@@ -110,8 +126,29 @@ void forkret() {
 void exit() {
     acquire_sched_lock();
     struct proc *p = thiscpu()->proc;
+    struct proc *ptable=thiscpu()->scheduler->ptable.proc;
+    asserts(p!=initproc,"init proc exit!");
     /* DONE: Lab3 Process */
-    /* TODO: Lab9 Shell */
+    /* DONE: Lab9 Shell */
+    for(int i=0;i<NOFILE;i++){
+        if(p->ofile[i]){
+            fileclose(p->ofile[i]);
+            p->ofile[i]=0;
+        }
+    }
+    OpContext ctx;
+    bcache.begin_op(&ctx);
+    inodes.put(&ctx,p->cwd);
+    bcache.end_op(&ctx);
+    p->cwd=0;
+    acquire_sched_lock();
+    wakeup_inlock(p->parent);
+    for(struct proc* np=ptable;np<ptable+NPROC;np++){
+        if(np->parent==p){
+            np->parent=initproc;
+            wakeup_inlock(p->parent);
+        }
+    }
 	p->state=ZOMBIE;
     sched();
     _assert(1==0,"zombie exit!");
@@ -136,21 +173,24 @@ void yield() {
  */
 void sleep(void *chan, SpinLock *lock) {
     /* DONE: lab6 container */
-    acquire_sched_lock();
-    release_spinlock(lock);
+    SpinLock *lk=&(thiscpu()->scheduler->ptable.lock);
+    if(lock!=lk){
+        acquire_sched_lock();
+        release_spinlock(lock);
+    }
     struct proc* p=thiscpu()->proc;
     p->chan=chan;
     p->state=SLEEPING;
     sched();
     p->chan=0;
-    release_sched_lock();
-    acquire_spinlock(lock);
+    if(lock!=lk){
+        release_sched_lock();
+        acquire_spinlock(lock);
+    }
 }
 
 /* Wake up all processes sleeping on chan. */
-void wakeup(void *chan) {
-    /* DONE: lab6 container */
-    acquire_sched_lock();
+void wakeup_inlock(void *chan){
     struct proc* cp=thiscpu()->proc;
     struct proc* p;
     for(int i=0;i<NPROC;i++){
@@ -159,6 +199,11 @@ void wakeup(void *chan) {
             p->state=RUNNABLE;
         }
     }
+}
+void wakeup(void *chan) {
+    /* DONE: lab6 container */
+    acquire_sched_lock();
+    wakeup_inlock(chan);
     release_sched_lock();
 }
 
@@ -178,8 +223,17 @@ void add_loop_test(int times) {
  * This function is used in `sys_brk`.
  */
 int growproc(int n) {
-	/* TODO: lab9 shell */
-
+	/* DONE: lab9 shell */
+    u32 sz;
+    struct proc* p=thiscpu()->proc;
+    sz=p->sz;
+    if(n>0){
+        if((sz=uvm_alloc(p->pgdir,p->base,p->stksz,sz,sz+n))==0)return -1;
+    }
+    else if(n<0){
+        sz=uvm_dealloc(p->pgdir,p->base,sz,sz+n);
+    }
+    p->sz=sz;
     return 0;
 }
 
@@ -191,9 +245,26 @@ int growproc(int n) {
  * Don't forget to copy file descriptors and `cwd` inode.
  */
 int fork() {
-    /* TODO: Lab9 shell */
-
-    return 0;
+    /* DONE: Lab9 shell */
+    struct proc* np=NULL;
+    struct proc* p=thiscpu()->proc;
+    if((np=alloc_proc())==0)return -1;
+    np->parent=p;
+    np->pgdir=uvm_copy(p->pgdir);
+    if(np->pgdir==NULL){
+        free_proc(np);
+        return -1;
+    }
+    np->sz=p->sz;
+    *(np->tf)=*(p->tf);
+    np->tf->x0=0;
+    for(int i=0;i<NOFILE;i++){
+        if(p->ofile[i])np->ofile[i]=filedup(p->ofile[i]);
+    }
+    np->cwd=inodes.share(p->cwd);
+    strncpy(np->name,p->name,sizeof(p->name));
+    int pid=np->pid;
+    return pid;
 }
 
 /*
@@ -203,7 +274,31 @@ int fork() {
  * You can release the PCB (set state to UNUSED) of its dead children.
  */
 int wait() {
-    /* TODO: Lab9 shell. */
-
+    /* DONE: Lab9 shell. */
+    struct proc* np;
+    struct proc *p=thiscpu()->proc;
+    struct proc *ptable=thiscpu()->scheduler->ptable.proc;
+    SpinLock* lk=&(thiscpu()->scheduler->ptable.lock);
+    bool havekid;
+    int pid;
+    acquire_sched_lock();
+    while(1){
+        havekid=0;
+        for(np=ptable;np<ptable+NPROC;np++){
+            if(np->parent!=p)continue;
+            havekid=1;
+            if(np->state==ZOMBIE){
+                pid=np->pid;
+                free_proc(np);
+                release_sched_lock();
+                return pid;
+            }
+        }
+        if(havekid==0||p->killed){
+            release_sched_lock();
+            return -1;
+        }
+        sleep(p,lk);
+    }
     return 0;
 }
