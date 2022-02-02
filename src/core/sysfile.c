@@ -93,7 +93,7 @@ isize sys_write() {
     int n;
     char* p;
     if(argfd(0,0,&f)<0||argint(2,&n)<0||argptr(1,&p,(usize)n)<0)return -1;
-    return filewrite(f,p,n);
+    return filewrite(f,p,(isize)n);
 }
 
 isize sys_writev() {
@@ -123,19 +123,22 @@ isize sys_writev() {
      */
 
     struct file *f;
-    i64 fd, iovcnt;
+    int iovcnt;
+    i64 fd;
     struct iovec *iov, *p;
     if (argfd(0, &fd, &f) < 0 ||
         argint(2, &iovcnt) < 0 ||
-        argptr(1, &iov, iovcnt * sizeof(struct iovec)) < 0) {
+        argptr(1, (void*)&iov, (usize)iovcnt * sizeof(struct iovec)) < 0) {
         return -1;
     }
 
-    usize tot = 0;
+    isize tot = 0,tmp;
     for (p = iov; p < iov + iovcnt; p++) {
         // in_user(p, n) checks if va [p, p+n) lies in user address space.
         asserts(in_user(p->iov_base, p->iov_len)!=0,"argptr should check!");
-        tot += filewrite(f, p->iov_base, p->iov_len);
+        tmp= filewrite(f, p->iov_base, (isize)p->iov_len);
+        if(tmp==-1)PANIC("sys_writev:filewrite error!");
+        tot+=tmp;
     }
     return tot;
 }
