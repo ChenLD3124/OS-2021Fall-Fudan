@@ -74,6 +74,19 @@ int uvm_map(PTEntriesPtr pgdir, void *va, usize sz, u64 pa) {
     return vmem.uvm_map(pgdir, va, sz, pa);
 }
 
+
+PTEntriesPtr uvm_copy(PTEntriesPtr pgdir) {
+    return vmem.uvm_copy(pgdir);
+}
+
+int uvm_alloc(PTEntriesPtr pgdir, usize base, usize stksz, usize oldsz, usize newsz) {
+    return vmem.uvm_alloc(pgdir, base, stksz, oldsz, newsz);
+}
+
+int uvm_dealloc(PTEntriesPtr pgdir, usize base, usize oldsz, usize newsz) {
+    return vmem.uvm_dealloc(pgdir, base, oldsz, newsz);
+}
+
 void uvm_switch(PTEntriesPtr pgdir) {
     // FIXME: Use NG and ASID for efficiency.
     arch_set_ttbr0(K2P(pgdir));
@@ -89,6 +102,10 @@ PTEntriesPtr uvm_copy(PTEntriesPtr pgdir){
 }
 int copyout(PTEntriesPtr pgdir, void *tgt_address, void *src_address, usize len){
     return vmem.copyout(pgdir,tgt_address,src_address,len);
+}
+
+int copyout(PTEntriesPtr pgdir, void *va, void *p, usize len) {
+    return vmem.copyout(pgdir, va, p, len);
 }
 
 /*
