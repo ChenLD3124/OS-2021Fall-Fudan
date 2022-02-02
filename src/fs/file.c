@@ -28,11 +28,12 @@ struct file *filealloc() {
         if(ftable.file[i].ref==0){
             ftable.file[i].ref=1;
             f=&ftable.file[i];
-            break;
+            release_spinlock(&ftable.lock);
+            return f;
         }
     }
     release_spinlock(&ftable.lock);
-    return f;
+    return NULL;
 }
 
 /* Increment ref count for file f. */

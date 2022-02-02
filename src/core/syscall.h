@@ -30,3 +30,7 @@ int argint(int n, int *ip);
 int argu64(int n, u64 *ip);
 int argptr(int n, char **pp, usize size);
 int argstr(int n, char **pp);
+
+//cld:add
+int in_user(void *s, usize n);
+int fetchstr(u64 addr, char **pp);

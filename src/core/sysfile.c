@@ -15,6 +15,7 @@
 #include <core/sleeplock.h>
 #include <fs/file.h>
 #include <fs/fs.h>
+#include <common/string.h>
 
 #include "syscall.h"
 
@@ -47,8 +48,14 @@ static int argfd(int n, i64 *pfd, struct file **pf) {
  * Takes over file reference from caller on success.
  */
 static int fdalloc(struct file *f) {
-    /* TODO: Lab9 Shell */
-    
+    /* DONE: Lab9 Shell */
+    struct proc *p=thiscpu()->proc;
+    for(int fd=0;fd<NOFILE;fd++){
+        if(p->ofile[fd]==0){
+            p->ofile[fd]=f;
+            return fd;
+        }
+    }
     return -1;
 }
 
@@ -56,7 +63,12 @@ static int fdalloc(struct file *f) {
  * Get the parameters and call filedup.
  */
 int sys_dup() {
-    /* TODO: Lab9 Shell. */
+    /* DONE: Lab9 Shell. */
+    struct file* f;
+    int fd;
+    if(argfd(0,0,&f)<0)return -1;
+    if((fd=fdalloc(f))<0)return -1;
+    filedup(f);
     return 0;
 }
 
@@ -64,20 +76,28 @@ int sys_dup() {
  * Get the parameters and call fileread.
  */
 isize sys_read() {
-    /* TODO: Lab9 Shell */
-    return -1;
+    /* DONE: Lab9 Shell */
+    struct file* f;
+    int n;
+    char* p;
+    if(argfd(0,0,&f)<0||argint(2,&n)<0||argptr(1,&p,(usize)n)<0)return -1;
+    return fileread(f,p,(isize)n);
 }
 
 /* 
  * Get the parameters and call filewrite.
  */
 isize sys_write() {
-    /* TODO: Lab9 Shell */
-    return -1;
+    /* DONE: Lab9 Shell */
+    struct file* f;
+    int n;
+    char* p;
+    if(argfd(0,0,&f)<0||argint(2,&n)<0||argptr(1,&p,(usize)n)<0)return -1;
+    return filewrite(f,p,n);
 }
 
 isize sys_writev() {
-    /* TODO: Lab9 Shell */
+    /* DONE: Lab9 Shell */
 
     /* Example code.
      *
@@ -102,7 +122,22 @@ isize sys_writev() {
      * ```
      */
 
-    return -1;
+    struct file *f;
+    i64 fd, iovcnt;
+    struct iovec *iov, *p;
+    if (argfd(0, &fd, &f) < 0 ||
+        argint(2, &iovcnt) < 0 ||
+        argptr(1, &iov, iovcnt * sizeof(struct iovec)) < 0) {
+        return -1;
+    }
+
+    usize tot = 0;
+    for (p = iov; p < iov + iovcnt; p++) {
+        // in_user(p, n) checks if va [p, p+n) lies in user address space.
+        asserts(in_user(p->iov_base, p->iov_len)!=0,"argptr should check!");
+        tot += filewrite(f, p->iov_base, p->iov_len);
+    }
+    return tot;
 }
 
 /* 
@@ -110,9 +145,12 @@ isize sys_writev() {
  * Clear this fd of this process.
  */
 int sys_close() {
-    /* TODO: Lab9 Shell */
-    
-
+    /* DONE: Lab9 Shell */
+    i64 fd;
+    struct file* f;
+    if(argfd(0,&fd,&f)<0)return -1;
+    thiscpu()->proc->ofile[fd]=0;
+    fileclose(f);
     return 0;
 }
 
@@ -120,8 +158,11 @@ int sys_close() {
  * Get the parameters and call filestat.
  */
 int sys_fstat() {
-    /* TODO: Lab9 Shell */
-    return -1;
+    /* DONE: Lab9 Shell */
+    struct file* f;
+    struct stat* st;
+    if(argfd(0,0,&f)<0||argptr(1,(void*)&st,sizeof(struct stat))<0)return -1;
+    return filestat(f,st);
 }
 
 int sys_fstatat() {
@@ -169,8 +210,35 @@ int sys_fstatat() {
  * If type is directory, you should additionally handle "." and "..".
  */
 Inode *create(char *path, short type, short major, short minor, OpContext *ctx) {
-    /* TODO: Lab9 Shell */
-    return 0;
+    /* DONE: Lab9 Shell */
+    Inode *dp=NULL,*ip=NULL;
+    char name[FILE_NAME_MAX_LENGTH];
+    if((dp=nameiparent(path,name,ctx))==0)return 0;
+    inodes.lock(dp);
+    usize ip_no;
+    if((ip_no=inodes.lookup(dp,name,0))!=0){
+        ip=inodes.get(ip_no);
+        inodes.unlock(dp);
+        if(type==INODE_REGULAR&&ip->entry.type==INODE_REGULAR)return ip;
+        inodes.unlock(ip);
+        return 0;
+    }
+    if((ip_no=inodes.alloc(ctx,(InodeType)type))==0)PANIC("create inode alloc!");
+    ip=inodes.get(ip_no);
+    ip->entry.major=(u16)major;
+    ip->entry.minor=(u16)minor;
+    ip->entry.num_links=1;
+    inodes.sync(ctx,ip,1);
+    if(type==INODE_DIRECTORY){
+        dp->entry.num_links++;
+        inodes.sync(ctx,dp,1);
+        if(inodes.insert(ctx,ip,".",ip->inode_no)==0||
+            inodes.insert(ctx,ip,"..",dp->inode_no)==0)
+            PANIC("create insert . ..!");
+    }
+    if(inodes.insert(ctx,dp,name,ip->inode_no)==0)PANIC("create insert ip!");
+    inodes.unlock(dp);
+    return ip;
 }
 
 int sys_openat() {
@@ -277,7 +345,7 @@ int sys_mknodat() {
 
     OpContext ctx;
     bcache.begin_op(&ctx);
-    if ((ip = create(path, INODE_DEVICE, major, minor, &ctx)) == 0) {
+    if ((ip = create(path, INODE_DEVICE, (short)major, (short)minor, &ctx)) == 0) {
         bcache.end_op(&ctx);
         return -1;
     }
@@ -317,6 +385,22 @@ int execve(const char *path, char *const argv[], char *const envp[]);
  * Get the parameters and call execve.
  */
 int sys_exec() {
-    /* TODO: Lab9 Shell */
-    return -1;
+    /* DONE: Lab9 Shell */
+    char *path;
+    char argv[32];
+    u64 uargv,uarg;
+    if(argstr(0,&path)<0||argu64(1,&uargv)<0)return -1;
+    memset(argv,0,sizeof(argv));
+    for(int i=0;;i++){
+        if(i>=32)return -1;
+        u64 *addr=(void*)uargv+(i<<3);
+        if(in_user(addr,8)==0)return -1;
+        uarg=*addr;
+        if(uarg==0){
+            argv[i]=0;
+            break;
+        }
+        if(fetchstr(uarg,(void*)&argv[i])<0)return -1;
+    }
+    return execve(path, (char* const*)argv, (char**)0);
 }

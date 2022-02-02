@@ -177,6 +177,7 @@ int execve(const char *path, char *const argv[], char *const envp[]) {
     // ---end
     uint64_t* oldpgdir = p->pgdir;
     p->pgdir=pgdir;
+    p->base=0;
     p->sz=sz;
     p->tf->SP_EL0 = sp;
     p->tf->ELR_EL1= elf.e_entry;
