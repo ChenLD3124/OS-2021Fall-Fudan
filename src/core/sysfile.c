@@ -235,11 +235,10 @@ Inode *create(char *path, short type, short major, short minor, OpContext *ctx) 
     if(type==INODE_DIRECTORY){
         dp->entry.num_links++;
         inodes.sync(ctx,dp,1);
-        if(inodes.insert(ctx,ip,".",ip->inode_no)==0||
-            inodes.insert(ctx,ip,"..",dp->inode_no)==0)
-            PANIC("create insert . ..!");
+        inodes.insert(ctx,ip,".",ip->inode_no);
+        inodes.insert(ctx,ip,"..",dp->inode_no);
     }
-    if(inodes.insert(ctx,dp,name,ip->inode_no)==0)PANIC("create insert ip!");
+    inodes.insert(ctx,dp,name,ip->inode_no);
     inodes.unlock(dp);
     return ip;
 }
