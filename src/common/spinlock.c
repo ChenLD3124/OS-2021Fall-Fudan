@@ -24,9 +24,9 @@ bool try_acquire_spinlock(SpinLock *lock) {
  */
 
 void acquire_spinlock(SpinLock *lock) {
-    if (holding_spinlock(lock)) {
-        PANIC("acquire: lock %s already held\n", lock->name);
-    }
+    // if (holding_spinlock(lock)) {
+    //     PANIC("acquire: lock %s already held\n", lock->name);
+    // }
     while (!try_acquire_spinlock(lock)) {}
 }
 
@@ -53,5 +53,5 @@ void wait_spinlock(SpinLock *lock) {
  */
 
 bool holding_spinlock(SpinLock *lock) {
-    return lock->locked && lock->cpu == thiscpu();
+    return lock->locked;// && lock->cpu == thiscpu();
 }

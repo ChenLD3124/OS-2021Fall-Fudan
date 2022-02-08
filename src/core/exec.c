@@ -92,13 +92,18 @@ static u64 auxv[][2] = {{AT_PAGESZ, PAGE_SIZE}};
  *
  */
 static int loadseg(PTEntriesPtr pgdir,u64 va,Inode *ip,u32 offset,u32 sz){
-    u64 pa;
-    asserts(va%PAGE_SIZE==0,"loadseg error,va!");
-    for(u32 i=0,n;i<sz;i+=PAGE_SIZE){
-        pa = V2K(pgdir,va+i);
-        asserts(pa!=0,"loadseg error!");
-        n=MIN(PAGE_SIZE,sz-i);
-        if(inodes.read(ip,(u8*)pa,offset+i,n)!=n)return -1;
+    u64 ka0,start;
+    asserts((va-offset)%PAGE_SIZE==0,"loadseg error,va!");
+    u32 n;
+    while(sz>0){
+        ka0=V2K(pgdir,round_down(va,PAGE_SIZE));
+        asserts(ka0!=0,"loadseg err!");
+        start=va%PAGE_SIZE;
+        n=MIN(PAGE_SIZE-start,sz);
+        if(inodes.read(ip,(u8*)(ka0+start),offset,n)!=n)return -1;
+        sz-=n;
+        va+=n;
+        offset+=n;
     }
     return 0;
 }
@@ -124,12 +129,11 @@ int execve(const char *path, char *const argv[], char *const envp[]) {
     Elf64_Phdr ph;
     u64 sz=0;
     for(int i=0,off=elf.e_phoff;i<elf.e_phnum;i++,off+=sizeof(ph)){
-        if(inodes.read(ip,(u8*)&ph,off,sizeof(ph)!=sizeof(ph)))goto bad;
+        if(inodes.read(ip,(u8*)&ph,off,sizeof(ph))!=sizeof(ph))goto bad;
         if(ph.p_type!=PT_LOAD)continue;
         if(ph.p_memsz<ph.p_filesz)goto bad;
         if(ph.p_vaddr+ph.p_memsz<ph.p_vaddr)goto bad;
         if((sz=uvm_alloc(pgdir,0,0,sz,ph.p_vaddr+ph.p_memsz))==0)goto bad;
-        if(ph.p_vaddr%PAGE_SIZE!=0)goto bad;
         if(loadseg(pgdir,ph.p_vaddr,ip,ph.p_offset,ph.p_filesz)<0)goto bad;
     }
     inodes.unlock(ip);
@@ -175,7 +179,7 @@ int execve(const char *path, char *const argv[], char *const envp[]) {
     if (copyout(pgdir,sp,&argc,8)<0)goto bad;
     asserts(sp%16==0,"exec stack error!");
     // ---end
-    uint64_t* oldpgdir = p->pgdir;
+    PTEntriesPtr oldpgdir = p->pgdir;
     p->pgdir=pgdir;
     p->base=0;
     p->sz=sz;

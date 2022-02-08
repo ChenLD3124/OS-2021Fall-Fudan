@@ -48,6 +48,7 @@ void trap_global_handler(Trapframe *frame) {
 
         default: {
             // DONE: should exit current process here.
+            printf("@@@%llx\n",ec);
             exit();
             _assert(1==2,"syscal not exit!");
             // exit(1);

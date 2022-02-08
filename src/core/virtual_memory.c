@@ -230,7 +230,7 @@ int my_uvm_map(PTEntriesPtr pgdir, void *va, usize sz, u64 pa) {
 
 int my_uvm_alloc(PTEntriesPtr pgdir, usize base, usize stksz, usize oldsz, usize newsz) {
     /* DONE: Lab9 Shell */
-    if(oldsz>newsz)return oldsz;
+    if(oldsz>=newsz)return oldsz;
     for(u64 i=round_up(oldsz,PAGE_SIZE);i<newsz;i+=PAGE_SIZE){
         char* mem=kalloc();
         if(mem==0){
@@ -280,27 +280,27 @@ int my_uvm_dealloc(PTEntriesPtr pgdir, usize base, usize oldsz, usize newsz) {
  * memcpy(dest=P2V(walk(pgdir, va, alloc=True)), src=p, size=len)
  */
 u64 V2K(PTEntriesPtr pgdir,void* va){
-  PTEntriesPtr pte=my_pgdir_walk(pgdir,va,0);
-  if(pte==NULL)return 0;
-  if((*pte&PTE_VALID)==0)return 0;
-  if((*pte&PTE_USER)==0)return 0;
-  u64 pa=PTEinit(*pte,3).pa;
-  return P2K(pa);
+    assert((u64)va%PAGE_SIZE==0);
+    PTEntriesPtr pte=my_pgdir_walk(pgdir,va,0);
+    if(pte==NULL)return 0;
+    if((*pte&PTE_VALID)==0)return 0;
+    if((*pte&PTE_USER)==0)return 0;
+    u64 pa=PTEinit(*pte,3).pa;
+    return P2K(pa);
 }
 
 int my_copyout(PTEntriesPtr pgdir, void *va, void *p, usize len) {
     /* DONE: Lab9 Shell */
-    u64 n, va0, pa0;
+    u64 n,ka0,start;
     while(len > 0){
-        va0=round_down(va,PAGE_SIZE);
-        pa0=V2K(pgdir,va0);
-        if(pa0==0)return -1;
-        n=PAGE_SIZE-((u64)va-va0);
-        if(n>len)n=len;
-        memmove((void*)(pa0+(va-va0)),p,n);
+        ka0=V2K(pgdir,round_down(va,PAGE_SIZE));
+        if(ka0==0)return -1;
+        start=(u64)va%PAGE_SIZE;
+        n=MIN(len,PAGE_SIZE-start);
+        memmove((void*)(ka0+start),p,n);
         len-=n;
         p+=n;
-        va=va0+PAGE_SIZE;
+        va=va+n;
     }
     return 0;
 }

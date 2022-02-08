@@ -158,7 +158,7 @@ static void inode_clear(OpContext *ctx, Inode *inode) {
     }
     if(entry->indirect){
         Block* bp=cache->acquire(entry->indirect);
-        IndirectBlock* ibp=(IndirectBlock*)bp;
+        IndirectBlock* ibp=(IndirectBlock*)(bp->data);
         for(u32 i=0;i<INODE_NUM_INDIRECT;i++){
             if(ibp->addrs[i]){
                 cache->free(ctx,ibp->addrs[i]);
@@ -228,7 +228,8 @@ static usize inode_map(OpContext *ctx, Inode *inode, usize offset, bool *modifie
             *modified=1;
         }
         bp=cache->acquire(entry->indirect);
-        iaddrp=(IndirectBlock*)bp;
+        iaddrp=(IndirectBlock*)(bp->data);
+        // printf("!%d %llu\n",bnum,entry->indirect);
         if(iaddrp->addrs[bnum-INODE_NUM_DIRECT]==0){
             iaddrp->addrs[bnum-INODE_NUM_DIRECT]=cache->alloc(ctx);
             *modified=1;
@@ -241,6 +242,7 @@ static usize inode_map(OpContext *ctx, Inode *inode, usize offset, bool *modifie
         assert(ctx!=NULL);
         inode_sync(ctx,inode,1);
     }
+    // printf("@@%llu\n",block_no);
     return block_no;
 }
 
@@ -264,6 +266,7 @@ static usize inode_read(Inode *inode, u8 *dest, usize offset, usize count) {
     usize step=0,bpnum,tot=0;
     bool modified=0;
     Block* bp;
+    // printf("%llu %llu\n",offset,end);
     for(usize p=offset;p<end;p+=step){
         step=MIN(BLOCK_SIZE-p%BLOCK_SIZE,end-p);
         bpnum=inode_map(NULL,inode,p,&modified);
@@ -422,6 +425,7 @@ static const char *skipelem(const char *path, char *name) {
 static Inode *namex(const char *path, int nameiparent, char *name, OpContext *ctx) {
 	/* DONE: Lab9 Shell */
 	Inode *ip,*nxt;
+    usize nxt_no;
     if(*path=='/') ip=inode_get(ROOT_INODE_NO);
     else{
         ip=thiscpu()->proc->cwd;
@@ -437,10 +441,12 @@ static Inode *namex(const char *path, int nameiparent, char *name, OpContext *ct
             inode_unlock(ip);
             return ip;
         }
-        if((nxt=inode_lookup(ip,name,0))==0){
+        if((nxt_no=inode_lookup(ip,name,0))==0){
             inode_unlock(ip);
+            printf("SSS %s\n",name);
             return 0;
         }
+        nxt=inodes.get(nxt_no);
         inode_unlock(ip);
         ip=nxt;
     }

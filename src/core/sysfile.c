@@ -214,6 +214,7 @@ int sys_fstatat() {
  */
 Inode *create(char *path, short type, short major, short minor, OpContext *ctx) {
     /* DONE: Lab9 Shell */
+    printf("create!\n");
     Inode *dp=NULL,*ip=NULL;
     char name[FILE_NAME_MAX_LENGTH];
     if((dp=nameiparent(path,name,ctx))==0)return 0;
@@ -222,12 +223,14 @@ Inode *create(char *path, short type, short major, short minor, OpContext *ctx) 
     if((ip_no=inodes.lookup(dp,name,0))!=0){
         ip=inodes.get(ip_no);
         inodes.unlock(dp);
+        inodes.lock(ip);
         if(type==INODE_REGULAR&&ip->entry.type==INODE_REGULAR)return ip;
         inodes.unlock(ip);
         return 0;
     }
     if((ip_no=inodes.alloc(ctx,(InodeType)type))==0)PANIC("create inode alloc!");
     ip=inodes.get(ip_no);
+    inodes.lock(ip);
     ip->entry.major=(u16)major;
     ip->entry.minor=(u16)minor;
     ip->entry.num_links=1;
@@ -251,7 +254,6 @@ int sys_openat() {
 
     if (argint(0, &dirfd) < 0 || argstr(1, &path) < 0 || argint(2, &omode) < 0)
         return -1;
-
     // printf("%d, %s, %lld\n", dirfd, path, omode);
     if (dirfd != AT_FDCWD) {
         printf("sys_openat: dirfd unimplemented\n");
@@ -274,6 +276,7 @@ int sys_openat() {
     } else {
         if ((ip = namei(path, &ctx)) == 0) {
             bcache.end_op(&ctx);
+    printf("%s\n",path);
             return -1;
         }
         inodes.lock(ip);
@@ -388,12 +391,12 @@ int execve(const char *path, char *const argv[], char *const envp[]);
  */
 int sys_exec() {
     /* DONE: Lab9 Shell */
-    char *path;
-    char argv[32];
+    char* path;
+    char* argv[32];
     u64 uargv,uarg;
     if(argstr(0,&path)<0||argu64(1,&uargv)<0)return -1;
     memset(argv,0,sizeof(argv));
-    for(int i=0;;i++){
+    if(uargv!=0)for(int i=0;;i++){
         if(i>=32)return -1;
         u64 *addr=(void*)uargv+(i<<3);
         if(in_user(addr,8)==0)return -1;

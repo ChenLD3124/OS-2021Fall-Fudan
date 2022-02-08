@@ -78,11 +78,14 @@ const char(*syscall_table_str[NR_SYSCALL]) = {[0 ... NR_SYSCALL - 1] = "sys_defa
                                               [SYS_close] = "sys_close",
                                               [SYS_myyield] = "sys_yield"};
 
+static void AAA(){return;}
 u64 syscall_dispatch(Trapframe *frame) {
     /* DONE: Lab9 Shell */
     int sysno=frame->x8;
     if (sysno < 400) printf("%d %s\n", sysno, syscall_table_str[sysno]);
 	frame->x0=syscall_table[sysno]();
+    if(sysno<400){printf("!!%d\n",frame->x0);AAA();}
+    // assert(sysno!=66);
     return frame->x0;
 }
 

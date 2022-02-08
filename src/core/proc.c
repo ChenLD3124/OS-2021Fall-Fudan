@@ -59,6 +59,7 @@ static struct proc *alloc_proc() {
     p->tf=sp;
     sp-=sizeof(context);
     p->context=sp;
+    p->base=0;
     memset(p->tf,0,sizeof(Trapframe));
     p->context->x30=(u64)forkret;
     return p;
@@ -77,14 +78,15 @@ struct proc* initproc;
 void spawn_init_process() {
     struct proc *p;
     // extern char loop_start[], loop_end[];
-    extern char ispin[], eicode[];
+    extern char icode[], eicode[];
     p = alloc_proc();
     if(p==0)PANIC("alloc proc fail!!");
     /* DONE: Lab3 Process */
     p->pgdir=pgdir_init();
     char * initcode=(char*)kalloc();
+    assert(initcode!=0);
     // memcpy(initcode,loop_start,loop_end-loop_start);
-    memcpy(initcode,ispin,eicode-ispin);
+    memcpy(initcode,icode,eicode-icode);
     strncpy(p->name,"init_process",sizeof(p->name));
     uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
     p->tf->ELR_EL1=0;
@@ -92,10 +94,32 @@ void spawn_init_process() {
     p->tf->x30=0;
     p->sz=PAGE_SIZE;
     p->parent=0;
+    OpContext ctx;
+    p->cwd=namei("/",&ctx);
     initproc=p;
     p->state=RUNNABLE;
 }
-
+void spawn_idle_process() {
+    struct proc *p;
+    // extern char loop_start[], loop_end[];
+    extern char ispin[], eicode[];
+    p = alloc_proc();
+    if(p==0)PANIC("alloc proc fail!!");
+    /* DONE: Lab3 Process */
+    p->pgdir=pgdir_init();
+    char * initcode=(char*)kalloc();
+    assert(initcode!=0);
+    // memcpy(initcode,loop_start,loop_end-loop_start);
+    memcpy(initcode,ispin,eicode-ispin);
+    strncpy(p->name,"idle_process",sizeof(p->name));
+    uvm_map(p->pgdir,(void*)0,PAGE_SIZE,K2P(initcode));
+    p->tf->ELR_EL1=0;
+    p->tf->SP_EL0=PAGE_SIZE;
+    p->tf->x30=0;
+    p->sz=PAGE_SIZE;
+    p->parent=0;
+    p->state=RUNNABLE;
+}
 /*
  * A fork child will first swtch here, and then "return" to user space.
  */
@@ -106,7 +130,7 @@ void forkret() {
     u32 now=sd_test_num;
     sd_test_num=1;
     release_sched_lock();
-    if(now!=0) sd_test();
+    if(now==0){init_filesystem();spawn_init_process();}//sd_test();//
     return;
 }
 
@@ -264,6 +288,7 @@ int fork() {
     np->cwd=inodes.share(p->cwd);
     strncpy(np->name,p->name,sizeof(p->name));
     int pid=np->pid;
+    np->state=RUNNABLE;
     return pid;
 }
 

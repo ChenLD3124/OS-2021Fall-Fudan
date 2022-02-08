@@ -503,13 +503,16 @@ static int sdBaseClock;
 struct SpinLock sdlock;
 static Arena test_arena;
 static SpinLock test_lock;
-
+u32 LBA;
 void sd_init() {
     /*
      * Initialize the lock and request queue if any.
      * Remember to call sd_init() at somewhere.
      */
     /* DONE: Lab7 driver. */
+    set_interrupt_handler(IRQ_SDIO, sd_intr);
+    set_interrupt_handler(IRQ_ARASANSDIO, sd_intr);
+    disb();
     sdInit();
     init_spinlock(&sdlock,"sd lock");
     init_bufq();
@@ -537,11 +540,9 @@ void sd_init() {
     sdWaitForInterrupt(INT_DATA_DONE);
     disb();
     u32* PE2=&MBR.data[0x1ce];
-    u32 LBA=PE2[2];
+    LBA=PE2[2];
     u32 num_of_sec=PE2[3];
     printf("LBA: %llx num_of_sec: %llx\n",LBA,num_of_sec);
-    set_interrupt_handler(IRQ_SDIO, sd_intr);
-    set_interrupt_handler(IRQ_ARASANSDIO, sd_intr);
 }
 
 static void sd_delayus(u32 c) {
@@ -617,6 +618,7 @@ void sd_intr() {
        printf("XXXXX\n");
        return; 
     }
+    // asserts(!bufq_empty(),"sd_intr error!");
     struct buf* b=bufq_front();
     int intr=*EMMC_INTERRUPT;
     *EMMC_INTERRUPT = intr;// Clear interrupt.
@@ -625,7 +627,7 @@ void sd_intr() {
         printf("%d\n",intr);
         PANIC("unpred intr\n");
     }
-    int is_write=(b->flags==B_DIRTY);
+    int is_write=(b->flags&B_DIRTY);
     if((is_write!=0&&intr!=INT_DATA_DONE)||(is_write==0&&intr!=INT_READ_RDY)){
         PANIC("unpred intr\n");
     }

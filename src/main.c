@@ -15,7 +15,6 @@
 struct cpu cpus[NCPU];
 
 static SpinLock init_lock = {.locked = 0};
-
 void init_system_once() {
     if (!try_acquire_spinlock(&init_lock))
         return;
@@ -35,7 +34,6 @@ void init_system_once() {
     init_container();
     init_queue();
     sd_init();
-
     release_spinlock(&init_lock);
 }
 
@@ -65,8 +63,9 @@ void main() {
 	/* DONE: Lab3 uncomment to test interrupt */
     // test_kernel_interrupt();
     if (cpuid() == 0) {
-        spawn_init_process();
-        for(int i=0;i<4;i++) spawn_init_process();
+        spawn_idle_process();
+        spawn_idle_process();
+        // for(int i=0;i<4;i++) spawn_init_process();
         // container_test_init();
         enter_scheduler();
     } else {

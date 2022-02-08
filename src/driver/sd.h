@@ -22,3 +22,4 @@ void sd_init();
 void sd_intr();
 void sd_test();
 void sdrw(struct buf *);
+extern u32 LBA;
