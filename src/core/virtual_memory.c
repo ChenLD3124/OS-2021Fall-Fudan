@@ -136,7 +136,7 @@ static PTEntriesPtr my_pgdir_walk(PTEntriesPtr pgdir, void *vak, int alloc) {
 void uvm_clear(PTEntriesPtr pgdir,void* vak){
     PTEntriesPtr pte=pgdir_walk(pgdir,vak,0);
     asserts(pte!=NULL,"uvm_clear error!");
-    *pte&=~PTE_USER;
+    *pte&=~(u64)PTE_USER;
 }
 /* 
  * Fork a process's page table.
@@ -146,10 +146,19 @@ void uvm_clear(PTEntriesPtr pgdir,void* vak){
 static int dfs_copy(PTEntriesPtr nwdir,PTEntriesPtr pgdir,PTEntriesPtr n_pgdir,IA ia,int d,int dep){
     if(d==dep){
         void* va=(void*)IA2u64(ia);
-        if(my_uvm_map(n_pgdir,va,PAGE_SIZE,K2P(nwdir))<0)return -1;
-        PTEntriesPtr pte=my_pgdir_walk(n_pgdir,va,0),ptes=my_pgdir_walk(pgdir,va,0);
-        asserts(pte!=NULL&&ptes!=NULL,"uvm_copy error!");
-        *pte=*ptes;
+        // NOTE: fork process don't share stack!!!
+        // if(my_uvm_map(n_pgdir,va,PAGE_SIZE,K2P(nwdir))<0)return -1;
+        // PTEntriesPtr pte=my_pgdir_walk(n_pgdir,va,0),ptes=my_pgdir_walk(pgdir,va,0);
+        // asserts(pte!=NULL&&ptes!=NULL,"uvm_copy error!");
+        // *pte=*ptes;
+        //
+        u64 ka=kalloc();
+        if(ka==0)return -1;
+        if(my_uvm_map(n_pgdir,va,PAGE_SIZE,K2P(ka))<0)return -1;
+        PTEntriesPtr ptes=my_pgdir_walk(pgdir,va,0);
+        assert(ptes!=0);
+        memcpy(ka,P2K(PTEinit(*ptes,3).pa),PAGE_SIZE);
+        //
         return 0;
     }
     d++;
@@ -259,7 +268,7 @@ int my_uvm_dealloc(PTEntriesPtr pgdir, usize base, usize oldsz, usize newsz) {
     for(u64 i=round_up(newsz,PAGE_SIZE);i<round_up(oldsz,PAGE_SIZE);i+=PAGE_SIZE){
         PTEntriesPtr pte=my_pgdir_walk(pgdir,(void*)i,0);
         if(pte==NULL)continue;
-        if(*pte&PTE_VALID==0)continue;
+        if((*pte&PTE_VALID)==0)continue;
         u64 pa=PTEinit(*pte,3).pa;
         assert(pa!=0);
         kfree(P2K(pa));

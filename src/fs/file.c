@@ -84,12 +84,12 @@ isize fileread(struct file *f, char *addr, isize n) {
     /* DONE: Lab9 Shell */
     if(f->readable==0)return -1;
     asserts(f!=NULL&&f->type==FD_INODE&&n>=0,"fileread");
-    int inc=0;
+    isize inc=0;
     inodes.lock(f->ip);
     inc=inodes.read(f->ip,addr,f->off,n);
     f->off+=inc;
     inodes.unlock(f->ip);
-    return 0;
+    return inc;
 }
 
 /* Write to file f. */
@@ -109,5 +109,5 @@ isize filewrite(struct file *f, char *addr, isize n) {
         bcache.end_op(&ctx);
         if(j!=inc)return -1;
     }
-    return 0;
+    return n;
 }

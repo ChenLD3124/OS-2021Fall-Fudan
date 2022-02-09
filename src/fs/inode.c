@@ -435,6 +435,7 @@ static Inode *namex(const char *path, int nameiparent, char *name, OpContext *ct
         inode_lock(ip);
         if(ip->entry.type!=INODE_DIRECTORY){
             inode_unlock(ip);
+            inode_put(ctx,ip);
             return 0;
         }
         if(nameiparent&&*path=='\0'){
@@ -443,11 +444,12 @@ static Inode *namex(const char *path, int nameiparent, char *name, OpContext *ct
         }
         if((nxt_no=inode_lookup(ip,name,0))==0){
             inode_unlock(ip);
-            printf("SSS %s\n",name);
+            inode_put(ctx,ip);
             return 0;
         }
-        nxt=inodes.get(nxt_no);
+        nxt=inode_get(nxt_no);
         inode_unlock(ip);
+        inode_put(ctx,ip);
         ip=nxt;
     }
     if(nameiparent){
@@ -459,6 +461,7 @@ static Inode *namex(const char *path, int nameiparent, char *name, OpContext *ct
 
 Inode *namei(const char *path, OpContext *ctx) {
     char name[FILE_NAME_MAX_LENGTH];
+    assert(ctx!=NULL);
     return namex(path, 0, name, ctx);
 }
 

@@ -223,9 +223,11 @@ Inode *create(char *path, short type, short major, short minor, OpContext *ctx) 
     if((ip_no=inodes.lookup(dp,name,0))!=0){
         ip=inodes.get(ip_no);
         inodes.unlock(dp);
+        inodes.put(ctx,dp);
         inodes.lock(ip);
         if(type==INODE_REGULAR&&ip->entry.type==INODE_REGULAR)return ip;
         inodes.unlock(ip);
+        inodes.put(ctx,ip);
         return 0;
     }
     if((ip_no=inodes.alloc(ctx,(InodeType)type))==0)PANIC("create inode alloc!");
@@ -243,6 +245,7 @@ Inode *create(char *path, short type, short major, short minor, OpContext *ctx) 
     }
     inodes.insert(ctx,dp,name,ip->inode_no);
     inodes.unlock(dp);
+    inodes.put(ctx,dp);
     return ip;
 }
 

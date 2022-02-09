@@ -95,7 +95,9 @@ void spawn_init_process() {
     p->sz=PAGE_SIZE;
     p->parent=0;
     OpContext ctx;
+    bcache.begin_op(&ctx);
     p->cwd=namei("/",&ctx);
+    bcache.end_op(&ctx);
     initproc=p;
     p->state=RUNNABLE;
 }
@@ -148,7 +150,7 @@ void forkret() {
  * Why not set the state to UNUSED in this function?
  */
 void exit() {
-    acquire_sched_lock();
+    // acquire_sched_lock();
     struct proc *p = thiscpu()->proc;
     struct proc *ptable=thiscpu()->scheduler->ptable.proc;
     asserts(p!=initproc,"init proc exit!");
@@ -300,13 +302,13 @@ int fork() {
  */
 int wait() {
     /* DONE: Lab9 shell. */
+    acquire_sched_lock();
     struct proc* np;
     struct proc *p=thiscpu()->proc;
     struct proc *ptable=thiscpu()->scheduler->ptable.proc;
     SpinLock* lk=&(thiscpu()->scheduler->ptable.lock);
     bool havekid;
     int pid;
-    acquire_sched_lock();
     while(1){
         havekid=0;
         for(np=ptable;np<ptable+NPROC;np++){

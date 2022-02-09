@@ -15,7 +15,7 @@ int sys_yield() {
  */
 usize sys_brk() {
     /* DONE: Lab9 Shell */
-    u64 n;
+    int n;
     if(argint(0, &n)<0)return -1;
     u64 sz = thiscpu()->proc->sz;
     if(growproc(n)<0)return -1;

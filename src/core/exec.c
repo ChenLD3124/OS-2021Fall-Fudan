@@ -137,6 +137,7 @@ int execve(const char *path, char *const argv[], char *const envp[]) {
         if(loadseg(pgdir,ph.p_vaddr,ip,ph.p_offset,ph.p_filesz)<0)goto bad;
     }
     inodes.unlock(ip);
+    inodes.put(&ctx,ip);
     bcache.end_op(&ctx);
     ip=0;
     sz=round_up(sz,PAGE_SIZE);
@@ -145,7 +146,7 @@ int execve(const char *path, char *const argv[], char *const envp[]) {
     uvm_clear(pgdir,(void*)(sz-2*PAGE_SIZE));
     u64 sp=sz,stackbase=sz-PAGE_SIZE;
     int argc=0;
-    u64 ustack[32];
+    u64 ustack[40];
     for(;argv[argc];argc++){
         if(argc>=32)goto bad;
         sp-=strlen(argv[argc])+1;// '\0'
@@ -191,6 +192,10 @@ int execve(const char *path, char *const argv[], char *const envp[]) {
 
     bad:
     if(pgdir)vm_free(pgdir);
-    if(ip)inodes.unlock(ip);
+    if(ip){
+        inodes.unlock(ip);
+        inodes.put(&ctx,ip);
+        bcache.end_op(&ctx);
+    }
     return -1;
 }
