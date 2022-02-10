@@ -8,6 +8,8 @@
 #include <driver/interrupt.h>
 #include <driver/irq.h>
 
+#include<core/sched.h>
+
 void init_trap() {
     extern char exception_vector[];
     arch_set_vbar(exception_vector);
@@ -50,7 +52,7 @@ void trap_global_handler(Trapframe *frame) {
 
         default: {
             // DONE: should exit current process here.
-            printf("@@@%llx\n",ec);
+            printf("@@@%llx %u %llx\n",ec,thiscpu()->proc->pid,arch_get_elr());
             exit();
             _assert(1==2,"syscal not exit!");
             // exit(1);

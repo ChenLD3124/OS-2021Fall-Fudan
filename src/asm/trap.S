@@ -35,6 +35,8 @@ trap_entry:
      str x9,  [sp,#-8]!
      mrs x9,  ELR_EL1
      str x9,  [sp,#-8]!
+     mrs x9,  TPIDR_EL0
+     str x9,  [sp,#-8]!
 
     /*
      * Call trap_global_handler(Trapframe *frame).
@@ -55,6 +57,8 @@ trap_return:
      * and then `pop x2`.
      */
     /* DONE: Lab3 Interrupt */
+    ldr x9,  [sp], #8
+    msr TPIDR_EL0, x9  
     ldr x9,  [sp], #8
     msr ELR_EL1,   x9  
     ldr x9,  [sp], #8

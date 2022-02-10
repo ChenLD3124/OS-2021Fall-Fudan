@@ -83,10 +83,11 @@ u64 syscall_dispatch(Trapframe *frame) {
     /* DONE: Lab9 Shell */
     int sysno=frame->x8;
     if (sysno < 400) printf("%d %s\n", sysno, syscall_table_str[sysno]);
-    if(sysno==260)AAA();
+    if(sysno==56)AAA();
 	frame->x0=syscall_table[sysno]();
     if(sysno<400){printf("!!%d\n",frame->x0);}
-    if(frame->x0==5){printf("%s\n",syscall_table_str[sysno]);}
+    if (sysno!=459) printf("#%d %u %s\n", sysno, thiscpu()->proc->pid,syscall_table_str[sysno]);
+    if(sysno==56||sysno==135)AAA();//0x400728  0x4007d4
     return frame->x0;
 }
 
