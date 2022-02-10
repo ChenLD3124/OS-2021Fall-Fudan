@@ -214,7 +214,7 @@ int sys_fstatat() {
  */
 Inode *create(char *path, short type, short major, short minor, OpContext *ctx) {
     /* DONE: Lab9 Shell */
-    printf("create!\n");
+    // printf("create!\n");
     Inode *dp=NULL,*ip=NULL;
     char name[FILE_NAME_MAX_LENGTH];
     if((dp=nameiparent(path,name,ctx))==0)return 0;
@@ -279,7 +279,7 @@ int sys_openat() {
     } else {
         if ((ip = namei(path, &ctx)) == 0) {
             bcache.end_op(&ctx);
-    printf("%s\n",path);
+    // printf("%s\n",path);
             return -1;
         }
         inodes.lock(ip);
